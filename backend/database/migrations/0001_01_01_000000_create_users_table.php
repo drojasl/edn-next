@@ -14,15 +14,19 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('last_name')->nullable();
+            $table->string('last_name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('codigo_amway')->nullable();
+            $table->string('codigo_amway', 20);
+            $table->boolean('is_account_holder')->default(true);
             $table->boolean('is_active')->default(true);
+            $table->string('slug')->unique()->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->unique(['codigo_amway', 'is_account_holder']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

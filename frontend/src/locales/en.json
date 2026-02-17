@@ -1,0 +1,81 @@
+{
+    "auth": {
+        "login": {
+            "title": "Sign In",
+            "amwayCode": "Amway Code",
+            "amwayCodePlaceholder": "Enter your Amway code",
+            "isTitular": "I am the account holder",
+            "password": "Password",
+            "passwordPlaceholder": "Enter your password",
+            "submit": "Sign In",
+            "loading": "Signing in..."
+        },
+        "errors": {
+            "required": "This field is required",
+            "invalidCredentials": "Invalid Amway code or password",
+            "serverError": "Server error. Please try again.",
+            "networkError": "Connection error. Check your internet."
+        }
+    },
+    "common": {
+        "language": "Language",
+        "spanish": "Español",
+        "english": "English"
+    },
+    "landing": {
+        "title": "Digital Business School",
+        "subtitle": "Enter your access code to continue",
+        "placeholder": "Access Code",
+        "button": "ACCESS",
+        "verifying": "Verifying...",
+        "errors": {
+            "invalid": "The code entered is not valid.",
+            "expired": "This access code has expired.",
+            "unavailable": "The course or entrepreneur is unavailable.",
+            "generic": "Something went wrong. Please try again."
+        }
+    },
+    "course": {
+        "loading": "Loading...",
+        "sidebarTitle": "Course Content",
+        "contact": "Contact",
+        "continue": "Continue",
+        "finish": "Finish Course",
+        "noLesson": "Select a lesson to begin",
+        "preparing": "Preparing...",
+        "editor": {
+            "title": "Course Editor",
+            "breadcrumbs": {
+                "courses": "Courses"
+            },
+            "tools": {
+                "video": "Video",
+                "form": "Form",
+                "menu": "Menu"
+            },
+            "loading_map": "Loading node map...",
+            "prompts": {
+                "node_title": "Node title:"
+            }
+        },
+        "management": {
+            "title": "Course Management",
+            "new_course": "+ New Course",
+            "edit": "Edit",
+            "delete": "Delete",
+            "delete_confirm": "Are you sure you want to delete this course?",
+            "delete_connection_confirm": "Are you sure you want to delete this connection?"
+        },
+        "node": {
+            "default_type": "Node",
+            "types": {
+                "video": "Video",
+                "form": "Form",
+                "menu": "Menu",
+                "info": "Info",
+                "action": "Action",
+                "course": "Course"
+            }
+        }
+    }
+}

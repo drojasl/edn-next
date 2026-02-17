@@ -1,0 +1,81 @@
+{
+    "auth": {
+        "login": {
+            "title": "Iniciar Sesión",
+            "amwayCode": "Código Amway",
+            "amwayCodePlaceholder": "Ingresa tu código Amway",
+            "isTitular": "Soy el titular de la cuenta",
+            "password": "Contraseña",
+            "passwordPlaceholder": "Ingresa tu contraseña",
+            "submit": "Iniciar Sesión",
+            "loading": "Iniciando sesión..."
+        },
+        "errors": {
+            "required": "Este campo es requerido",
+            "invalidCredentials": "Código Amway o contraseña incorrectos",
+            "serverError": "Error del servidor. Intenta nuevamente.",
+            "networkError": "Error de conexión. Verifica tu internet."
+        }
+    },
+    "common": {
+        "language": "Idioma",
+        "spanish": "Español",
+        "english": "English"
+    },
+    "landing": {
+        "title": "Escuela de Negocios Digital",
+        "subtitle": "Ingresa tu código de acceso para continuar",
+        "placeholder": "Código de Acceso",
+        "button": "ACCEDER",
+        "verifying": "Verificando...",
+        "errors": {
+            "invalid": "El código ingresado no es válido.",
+            "expired": "Este código de acceso ha expirado.",
+            "unavailable": "El curso o empresario no están disponibles.",
+            "generic": "Algo salió mal. Intenta nuevamente."
+        }
+    },
+    "course": {
+        "loading": "Cargando...",
+        "sidebarTitle": "Contenido del Curso",
+        "contact": "Contactar",
+        "continue": "Continuar",
+        "finish": "Finalizar Curso",
+        "noLesson": "Selecciona una lección para comenzar",
+        "preparing": "Preparando...",
+        "editor": {
+            "title": "Editor de Curso",
+            "breadcrumbs": {
+                "courses": "Cursos"
+            },
+            "tools": {
+                "video": "Video",
+                "form": "Formulario",
+                "menu": "Menú"
+            },
+            "loading_map": "Cargando mapa de nodos...",
+            "prompts": {
+                "node_title": "Título del nodo:"
+            }
+        },
+        "management": {
+            "title": "Gestión de Cursos",
+            "new_course": "+ Nuevo Curso",
+            "edit": "Editar",
+            "delete": "Eliminar",
+            "delete_confirm": "¿Estás seguro de que quieres eliminar este curso?",
+            "delete_connection_confirm": "¿Estás seguro de que quieres eliminar esta conexión?"
+        },
+        "node": {
+            "default_type": "Nodo",
+            "types": {
+                "video": "Video",
+                "form": "Formulario",
+                "menu": "Menú",
+                "info": "Información",
+                "action": "Acción",
+                "course": "Curso"
+            }
+        }
+    }
+}
