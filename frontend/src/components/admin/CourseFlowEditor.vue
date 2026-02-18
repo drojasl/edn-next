@@ -7,6 +7,7 @@ interface Course {
     id: number
     title: string
     next_course_id: number | null
+    next_course_label: string | null
     pos_x: number
     pos_y: number
 }
@@ -47,6 +48,7 @@ const initFlow = () => {
             id: `e-${c.id}-${c.next_course_id}`,
             source: c.id.toString(),
             target: c.next_course_id!.toString(),
+            label: c.next_course_label || 'Next',
             type: 'custom',
             animated: true
         }))
@@ -61,22 +63,24 @@ const handleNodeChange = (data: { id: number, pos_x: number, pos_y: number }) =>
 // Handle bulk save (connections)
 const handleSave = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
     // Transform edges back to "next_course_id" map
-    const nextCourseMap = new Map<number, number>()
+    const nextCourseMap = new Map<number, { next_course_id: number, next_course_label: string }>()
     
     edges.forEach(edge => {
         const sourceId = parseInt(edge.source)
         const targetId = parseInt(edge.target)
-        // In Course flow, one source has only one target (visual restriction not enforced by VueFlow but by logic)
-        // If multiple, last one wins or we should validate. 
-        // For now take the last one.
-        nextCourseMap.set(sourceId, targetId)
+        nextCourseMap.set(sourceId, { 
+            next_course_id: targetId, 
+            next_course_label: edge.label || 'Next' 
+        })
     })
 
     const updates = nodes.map(node => {
         const id = parseInt(node.id)
+        const connection = nextCourseMap.get(id)
         return {
             id,
-            next_course_id: nextCourseMap.get(id) || null
+            next_course_id: connection?.next_course_id || null,
+            next_course_label: connection?.next_course_label || null
         }
     })
 

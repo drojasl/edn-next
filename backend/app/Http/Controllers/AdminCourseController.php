@@ -30,6 +30,7 @@ class AdminCourseController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'next_course_id' => 'nullable|exists:courses,id',
+            'next_course_label' => 'nullable|string|max:255',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']);
@@ -74,6 +75,7 @@ class AdminCourseController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'next_course_id' => 'nullable|exists:courses,id',
+            'next_course_label' => 'nullable|string|max:255',
         ]);
 
         if (isset($validated['title'])) {
@@ -112,10 +114,14 @@ class AdminCourseController extends Controller
             'connections' => 'required|array',
             'connections.*.id' => 'required|exists:courses,id',
             'connections.*.next_course_id' => 'nullable|exists:courses,id',
+            'connections.*.next_course_label' => 'nullable|string|max:255',
         ]);
 
         foreach ($validated['connections'] as $connection) {
-            Course::where('id', $connection['id'])->update(['next_course_id' => $connection['next_course_id']]);
+            Course::where('id', $connection['id'])->update([
+                'next_course_id' => $connection['next_course_id'],
+                'next_course_label' => $connection['next_course_label'] ?? null
+            ]);
         }
 
         return response()->json([

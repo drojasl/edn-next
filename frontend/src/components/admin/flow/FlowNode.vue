@@ -23,18 +23,9 @@ const isCourse = computed(() => props.data?.isCourse)
 const isStart = computed(() => props.data?.isStart)
 const isEnd = computed(() => props.data?.isEnd)
 
-// Resolve icon based on type
-const icon = computed(() => {
-    switch (props.data?.type) {
-        case 'video': return '🎥'
-        case 'form': return '📝'
-        case 'menu': return '🔀'
-        case 'info': return 'ℹ️'
-        case 'action': return '⚡'
-        case 'course': return '🎓'
-        default: return '📄'
-    }
-})
+// 22: const isCourse = computed(() => props.data?.isCourse)
+// ...
+
 
 // Dynamic class for border color
 const borderColor = computed(() => {
@@ -51,9 +42,8 @@ const borderColor = computed(() => {
     class="bg-white rounded-lg shadow-md border-2 w-64 transition-all duration-200"
     :class="borderColor"
   >
-    <!-- Input Handle (Target) - Not for Start Node -->
+    <!-- Input Handle (Target) - All nodes can receive connections -->
     <Handle 
-      v-if="!isStart" 
       type="target" 
       :position="Position.Left" 
       class="!w-4 !h-4 !bg-slate-300 !border-2 !border-white hover:!bg-indigo-500 transition-colors" 
@@ -72,8 +62,8 @@ const borderColor = computed(() => {
           </div>
         </div>
 
-        <!-- Action Icons (Top Right for Courses) -->
-        <div v-if="isCourse" class="flex gap-0.5 shrink-0 -mt-1">
+        <!-- Action Icons (Top Right) -->
+        <div class="flex gap-0.5 shrink-0 -mt-1">
           <button 
             @click.stop="$emit('action', { type: 'edit', id: props.id })" 
             class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors group"
@@ -99,29 +89,10 @@ const borderColor = computed(() => {
       <p v-if="data.description" class="text-xs text-slate-600 line-clamp-2 mt-1 mb-2 italic">
         {{ data.description }}
       </p>
-
-      <!-- Specific UI for Option/Branching Nodes -->
-      <div v-if="data.options && data.options.length > 0" class="mt-3 space-y-2">
-        <div 
-            v-for="(opt, idx) in data.options" 
-            :key="idx" 
-            class="relative text-xs bg-slate-50 p-2 rounded border border-slate-100 flex justify-between items-center"
-        >
-            <span class="truncate pr-4">{{ opt.label }}</span>
-            <!-- Multiple Output Handles for Branching -->
-            <Handle 
-                :id="`opt-${idx}`"
-                type="source" 
-                :position="Position.Right" 
-                class="!w-3 !h-3 !bg-indigo-500 !border-2 !border-white !-right-3" 
-            />
-        </div>
-      </div>
     </div>
 
-    <!-- Default Output Handle (Source) - For linear flow or Courses -->
+    <!-- Default Output Handle (Source) - All nodes can send connections -->
     <Handle 
-      v-if="(isCourse || (!data.options?.length && !isEnd))" 
       type="source" 
       :position="Position.Right" 
       class="!w-4 !h-4 !bg-indigo-500 !border-2 !border-white hover:!scale-125 transition-transform" 

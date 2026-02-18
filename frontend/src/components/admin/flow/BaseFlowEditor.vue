@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { VueFlow, useVueFlow, type Node, type Edge, type Connection } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
@@ -18,12 +19,16 @@ const props = withDefaults(defineProps<{
     initialEdges: Edge[]
     showSaveButton?: boolean
     nodeExtent?: [[number, number], [number, number]]
+    allowMultipleOutputs?: boolean
 }>(), {
     showSaveButton: false,
-    nodeExtent: undefined
+    nodeExtent: undefined,
+    allowMultipleOutputs: false
 })
 
 const emit = defineEmits(['save', 'node-change', 'connection-change', 'action'])
+
+const { t } = useI18n()
 
 const nodes = ref<Node[]>([])
 const edges = ref<Edge[]>([])
@@ -79,8 +84,14 @@ onNodeDragStop(({ node }) => {
 
 // Handle new connections
 onConnect(async (params: Connection) => {
+    // Validate connection before adding
+    if (!isValidConnection(params)) {
+        return
+    }
+
     const customEdge = {
         ...params,
+        label: t('course.editor.default_connection_label'), // ✅ Dynamic label based on locale
         type: 'custom',
         animated: true
     } as Edge
@@ -110,13 +121,16 @@ onEdgesChange(async (changes) => {
     }
 })
 
-// Validation: Restricted to 1 outgoing connection
+// Validation: Configurable based on allowMultipleOutputs
 const isValidConnection = (connection: Connection) => {
     // During initialization, everything is valid (since we're loading from DB)
     if (isInitializing.value) return true
 
+    // If multiple outputs allowed, always valid (for nodes)
+    if (props.allowMultipleOutputs) return true
+    
+    // Restricted to 1 outgoing connection (for courses)
     // Check if source already has a DIFFERENT outgoing edge
-    // We filter by source and check if any existing edge has a different target
     const sourceHasAnotherEdge = edges.value.some(edge => 
         edge.source === connection.source && edge.target !== connection.target
     )
@@ -129,6 +143,15 @@ const onSave = () => {
         nodes: nodes.value,
         edges: edges.value
     })
+}
+
+const handleLabelChange = async (edgeId: string, newLabel: string) => {
+    const edge = edges.value.find(e => e.id === edgeId)
+    if (edge) {
+        edge.label = newLabel
+        await nextTick()
+        emit('connection-change', { nodes: nodes.value, edges: edges.value })
+    }
 }
 
 defineExpose({
@@ -158,7 +181,10 @@ defineExpose({
             </template>
 
             <template #edge-custom="edgeProps">
-                <ConnectionEdge v-bind="edgeProps" />
+                <ConnectionEdge 
+                    v-bind="edgeProps" 
+                    @label-change="(label: string) => handleLabelChange(edgeProps.id, label)"
+                />
             </template>
         </VueFlow>
 

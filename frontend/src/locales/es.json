@@ -62,8 +62,15 @@
             },
             "loading_map": "Cargando mapa de nodos...",
             "prompts": {
-                "node_title": "Título del nodo:"
-            }
+                "node_title": "Título del nodo:",
+                "node_title_edit": "Editar título del nodo:",
+                "node_delete_confirm": "¿Estás seguro de que quieres eliminar este nodo? Esta acción no se puede deshacer."
+            },
+            "delete": "Eliminar Nodo",
+            "delete_confirm": "¿Estás seguro de que quieres eliminar este nodo?",
+            "delete_success": "Nodo eliminado correctamente.",
+            "delete_error_connected": "Para eliminar este nodo, primero debes desconectarlo de otros nodos (entrantes y salientes).",
+            "default_connection_label": "Continuar"
         },
         "management": {
             "title": "Gestión de Cursos",

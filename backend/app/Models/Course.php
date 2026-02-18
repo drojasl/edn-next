@@ -19,6 +19,7 @@ class Course extends Model
         'pos_x',
         'pos_y',
         'next_course_id',
+        'next_course_label',
     ];
 
     protected $casts = [

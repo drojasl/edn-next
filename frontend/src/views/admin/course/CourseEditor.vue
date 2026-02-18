@@ -5,6 +5,11 @@ import { useI18n } from 'vue-i18n'
 import BaseFlowEditor from '../../../components/admin/flow/BaseFlowEditor.vue'
 import { apiRequest } from '../../../api/apiClient'
 import { EDITOR_CONFIG } from '../../../config/constants'
+import AppToast from '../../../components/common/AppToast.vue'
+import ConfirmationModal from '../../../components/common/ConfirmationModal.vue'
+import { useDebounce } from '../../../composables/useDebounce'
+import type { FlowNodeChange } from '../../../types/CourseFlow'
+import type { ModalConfig } from '../../../components/common/ConfirmationModal.vue'
 
 const route = useRoute()
 const courseId = route.params.id
@@ -43,18 +48,21 @@ const fetchNodes = async () => {
             }
         }))
 
-        // Transform Edges based on Options
+        // Transform Options to Edges
+        // Each option represents ONE connection: course_node_id -> next_node_id
         const edges: any[] = []
         nodes.forEach((node: any) => {
             if (node.options && node.options.length) {
-                node.options.forEach((opt: any, index: number) => {
+                node.options.forEach((opt: any) => {
                     if (opt.next_node_id) {
                         edges.push({
-                            id: `e-${node.id}-${opt.next_node_id}`,
+                            id: `e${opt.id || `${node.id}-${opt.next_node_id}`}`,
                             source: node.id.toString(),
                             target: opt.next_node_id.toString(),
-                            sourceHandle: `opt-${index}`,
-                            label: opt.label
+                            label: opt.label, // Always show the label
+                            // Unified output: no sourceHandle needed anymore
+                            type: 'custom',
+                            animated: true
                         })
                     }
                 })
@@ -65,48 +73,26 @@ const fetchNodes = async () => {
     loading.value = false
 }
 
-import { useDebounce } from '../../../composables/useDebounce'
-import type { FlowNodeChange } from '../../../types/CourseFlow'
-
 // Init composables
 const { createDebouncer, createStateDebouncer } = useDebounce(1000)
 
-const handleConnectionChange = createStateDebouncer<{ nodes: any[], edges: any[] }>(async ({ nodes, edges }) => {
-    // Group connections by source node
-    const connectionsMap = new Map<string, any[]>()
-    
-    edges.forEach(edge => {
-        if (!connectionsMap.has(edge.source)) {
-            connectionsMap.set(edge.source, [])
-        }
-        connectionsMap.get(edge.source)?.push(edge)
-
-    })
-
-    const connectionsPayload = nodes.filter(n => n.type === 'custom').map(node => {
-        const nodeEdges = connectionsMap.get(node.id) || []
-        const originalOptions = node.data.options || []
-        
-        const updatedOptions = originalOptions.map((opt: any, index: number) => {
-            const edge = nodeEdges.find((e: any) => e.sourceHandle === `opt-${index}`)
-            return {
-                ...opt,
-                next_node_id: edge ? parseInt(edge.target) : null
-            }
-        })
-
-        return {
-            node_id: parseInt(node.id),
-            options: updatedOptions
-        }
-    })
+const handleConnectionChange = createStateDebouncer<{ edges: any[] }>(async ({ edges }) => {
+    // Each edge represents ONE connection record in course_node_options
+    // No grouping needed - just map edges directly to connections
+    const connections = edges.map(edge => ({
+        source_node_id: parseInt(edge.source),
+        target_node_id: parseInt(edge.target),
+        label: edge.label || t('course.editor.default_connection_label')
+    }))
 
     await apiRequest({
         method: 'POST',
         url: `/v1/admin/courses/${courseId}/nodes/update-connections`,
-        body: { connections: connectionsPayload }
+        body: { connections }
     })
-    console.log('Connections saved')
+    
+    // Sync local state to allow safe deletion check without full fetch
+    initialEdges.value = edges
 })
 
 const handlePositionChange = createDebouncer<FlowNodeChange>(async (payload) => {
@@ -115,11 +101,29 @@ const handlePositionChange = createDebouncer<FlowNodeChange>(async (payload) => 
         url: `/v1/admin/courses/${courseId}/nodes/update-positions`,
         body: { positions: payload }
     })
-    console.log('Positions saved')
+
+    // Sync local node positions for consistency
+    payload.forEach(p => {
+        const node = initialNodes.value.find(n => n.id === p.id.toString())
+        if (node) {
+            node.position = { x: p.pos_x, y: p.pos_y }
+        }
+    })
 })
 
 
 const { t } = useI18n()
+
+const toastRef = ref<InstanceType<typeof AppToast> | null>(null)
+const modalRef = ref<InstanceType<typeof ConfirmationModal> | null>(null)
+
+const showToast = (message: string, type: 'success' | 'error' = 'error') => {
+    toastRef.value?.show(message, type)
+}
+
+const openModal = (config: ModalConfig) => {
+    modalRef.value?.open(config)
+}
 
 const addNode = async (type: string) => {
     const title = prompt(t('course.editor.prompts.node_title'))
@@ -138,6 +142,57 @@ const addNode = async (type: string) => {
 
     if (response.success) {
         fetchNodes()
+    }
+}
+
+const handleAction = async ({ type, id }: { type: string, id: string }) => {
+    if (type === 'edit') {
+        const nodeId = parseInt(id)
+        const node = initialNodes.value.find((n: any) => n.id === id)
+        if (!node) return
+
+        const newTitle = prompt(t('course.editor.prompts.node_title_edit'), node.data.title)
+        if (!newTitle || newTitle === node.data.title) return
+
+        const response = await apiRequest({
+            method: 'PUT',
+            url: `/v1/admin/courses/${courseId}/nodes/${nodeId}`,
+            body: { title: newTitle }
+        })
+
+        if (response.success) {
+            fetchNodes()
+        }
+    } else if (type === 'delete') {
+        // 1. Check for connections (incoming or outgoing) in initialEdges
+        const hasConnections = initialEdges.value.some(edge =>
+            edge.source === id || edge.target === id
+        )
+
+        if (hasConnections) {
+            showToast(t('course.editor.delete_error_connected'), 'error')
+            return
+        }
+
+        openModal({
+            title: t('course.editor.delete'),
+            message: t('course.editor.delete_confirm'),
+            isDestructive: true,
+            confirmText: t('course.management.delete'),
+            onConfirm: async () => {
+                const response = await apiRequest({
+                    method: 'DELETE',
+                    url: `/v1/admin/courses/${courseId}/nodes/${id}`
+                })
+
+                if (response.success) {
+                    showToast(t('course.editor.delete_success'), 'success')
+                    fetchNodes()
+                } else {
+                    showToast(response.error?.message || t('common.error'), 'error')
+                }
+            }
+        })
     }
 }
 
@@ -175,9 +230,15 @@ onMounted(() => {
                 :initialNodes="initialNodes"
                 :initialEdges="initialEdges"
                 :node-extent="nodeExtent"
+                :allowMultipleOutputs="true"
                 @node-change="handlePositionChange"
                 @connection-change="handleConnectionChange"
+                @action="handleAction"
             />
         </div>
+
+        <!-- Reusable Components -->
+        <AppToast ref="toastRef" />
+        <ConfirmationModal ref="modalRef" />
     </div>
 </template>

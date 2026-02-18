@@ -32,4 +32,5 @@ export interface FlowNodeChange {
 export interface CourseConnectionUpdate {
     id: number
     next_course_id: number | null
+    next_course_label: string | null
 }

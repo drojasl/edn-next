@@ -132,7 +132,8 @@ class AdminCourseNodeController extends Controller
     }
 
     /**
-     * Update connections (Options) for a node.
+     * Update connections between nodes.
+     * Each connection is a record in course_node_options: source_node_id -> target_node_id
      */
     public function updateConnections(Request $request, $courseId)
     {
@@ -140,24 +141,34 @@ class AdminCourseNodeController extends Controller
 
         $validated = $request->validate([
             'connections' => 'required|array',
-            'connections.*.node_id' => 'required|exists:course_nodes,id',
-            'connections.*.options' => 'present|array',
-            'connections.*.options.*.label' => 'nullable|string',
-            'connections.*.options.*.next_node_id' => 'nullable|exists:course_nodes,id',
+            'connections.*.source_node_id' => 'required|exists:course_nodes,id',
+            'connections.*.target_node_id' => 'required|exists:course_nodes,id',
+            'connections.*.label' => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($validated, $course) {
+            // Get all node IDs for this course
+            $nodeIds = CourseNode::where('course_id', $course->id)->pluck('id');
+            
+            // Delete all existing connections for these nodes
+            CourseNodeOption::whereIn('course_node_id', $nodeIds)->delete();
+            
+            // Create new connections - each edge is one record
             foreach ($validated['connections'] as $conn) {
-                CourseNodeOption::where('course_node_id', $conn['node_id'])->delete();
+                // Verify both nodes belong to this course
+                $sourceNode = CourseNode::where('id', $conn['source_node_id'])
+                    ->where('course_id', $course->id)
+                    ->first();
+                $targetNode = CourseNode::where('id', $conn['target_node_id'])
+                    ->where('course_id', $course->id)
+                    ->first();
 
-                foreach ($conn['options'] as $opt) {
-                    if (!empty($opt['next_node_id'])) {
-                        CourseNodeOption::create([
-                            'course_node_id' => $conn['node_id'],
-                            'label' => $opt['label'] ?? 'Next',
-                            'next_node_id' => $opt['next_node_id']
-                        ]);
-                    }
+                if ($sourceNode && $targetNode) {
+                    CourseNodeOption::create([
+                        'course_node_id' => $conn['source_node_id'],
+                        'next_node_id' => $conn['target_node_id'],
+                        'label' => $conn['label'] ?? 'Next'
+                    ]);
                 }
             }
         });

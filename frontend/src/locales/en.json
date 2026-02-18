@@ -62,8 +62,15 @@
             },
             "loading_map": "Loading node map...",
             "prompts": {
-                "node_title": "Node title:"
-            }
+                "node_title": "Node title:",
+                "node_title_edit": "Edit node title:",
+                "node_delete_confirm": "Are you sure you want to delete this node? This action cannot be undone."
+            },
+            "delete": "Delete Node",
+            "delete_confirm": "Are you sure you want to delete this node?",
+            "delete_success": "Node deleted successfully.",
+            "delete_error_connected": "To delete this node, you must first disconnect it from other nodes (incoming and outgoing).",
+            "default_connection_label": "Next"
         },
         "management": {
             "title": "Course Management",
