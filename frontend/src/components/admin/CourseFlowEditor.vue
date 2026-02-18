@@ -47,6 +47,7 @@ const initFlow = () => {
             id: `e-${c.id}-${c.next_course_id}`,
             source: c.id.toString(),
             target: c.next_course_id!.toString(),
+            type: 'custom',
             animated: true
         }))
 }

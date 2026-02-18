@@ -19,8 +19,15 @@
     },
     "common": {
         "language": "Language",
-        "spanish": "Español",
-        "english": "English"
+        "spanish": "Spanish",
+        "english": "English",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "error": "An error occurred. Please try again."
+    },
+    "toast": {
+        "error_title": "Action Required",
+        "success_title": "Operation Successful"
     },
     "landing": {
         "title": "Digital Business School",
@@ -64,6 +71,8 @@
             "edit": "Edit",
             "delete": "Delete",
             "delete_confirm": "Are you sure you want to delete this course?",
+            "delete_success": "Course deleted successfully.",
+            "delete_error_connected": "To delete this course, you must first disconnect it from other courses (incoming and outgoing).",
             "delete_connection_confirm": "Are you sure you want to delete this connection?"
         },
         "node": {

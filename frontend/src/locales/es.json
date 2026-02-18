@@ -20,7 +20,14 @@
     "common": {
         "language": "Idioma",
         "spanish": "Español",
-        "english": "English"
+        "english": "English",
+        "confirm": "Confirmar",
+        "cancel": "Cancelar",
+        "error": "Ha ocurrido un error. Inténtalo de nuevo."
+    },
+    "toast": {
+        "error_title": "Acción Requerida",
+        "success_title": "Operación Exitosa"
     },
     "landing": {
         "title": "Escuela de Negocios Digital",
@@ -64,6 +71,8 @@
             "edit": "Editar",
             "delete": "Eliminar",
             "delete_confirm": "¿Estás seguro de que quieres eliminar este curso?",
+            "delete_success": "Curso eliminado correctamente.",
+            "delete_error_connected": "Para eliminar este curso, primero debes desconectarlo de otros cursos (entradas y salidas).",
             "delete_connection_confirm": "¿Estás seguro de que quieres eliminar esta conexión?"
         },
         "node": {

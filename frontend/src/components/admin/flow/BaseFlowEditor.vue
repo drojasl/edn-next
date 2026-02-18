@@ -5,7 +5,7 @@ import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
 import FlowNode from './FlowNode.vue'
-import { useI18n } from 'vue-i18n'
+import ConnectionEdge from './ConnectionEdge.vue'
 
 // Import styles
 import '@vue-flow/core/dist/style.css'
@@ -29,8 +29,7 @@ const nodes = ref<Node[]>([])
 const edges = ref<Edge[]>([])
 const isInitializing = ref(true)
 
-const { onConnect, addEdges, onNodeDragStop, onEdgeUpdate, onEdgeClick, updateEdge, removeEdges } = useVueFlow()
-const { t } = useI18n()
+const { onConnect, addEdges, onNodeDragStop, onEdgeUpdate, onEdgesChange, updateEdge } = useVueFlow()
 
 onMounted(async () => {
     // 1. Set nodes first
@@ -80,25 +79,34 @@ onNodeDragStop(({ node }) => {
 
 // Handle new connections
 onConnect(async (params: Connection) => {
-    addEdges([params])
+    const customEdge = {
+        ...params,
+        type: 'custom',
+        animated: true
+    } as Edge
+    addEdges([customEdge])
     await nextTick()
     emit('connection-change', { nodes: nodes.value, edges: edges.value })
 })
 
 // Handle edge updates (moving an existing connection)
 onEdgeUpdate(async ({ edge, connection }) => {
-    updateEdge(edge, connection)
+    const updatedConnection = {
+        ...connection,
+        type: 'custom',
+        animated: true
+    } as Connection
+    updateEdge(edge, updatedConnection)
     await nextTick()
     emit('connection-change', { nodes: nodes.value, edges: edges.value })
 })
 
-// Handle edge clicks for deletion
-onEdgeClick(({ edge }) => {
-    if (confirm(t('course.management.delete_connection_confirm'))) {
-        removeEdges([edge])
-        setTimeout(() => {
-            emit('connection-change', { nodes: nodes.value, edges: edges.value })
-        }, 50)
+// Handle edge clicks (optional, currently not used)
+onEdgesChange(async (changes) => {
+    const hasRemoval = changes.some(c => c.type === 'remove')
+    if (hasRemoval && !isInitializing.value) {
+        await nextTick()
+        emit('connection-change', { nodes: nodes.value, edges: edges.value })
     }
 })
 
@@ -147,6 +155,10 @@ defineExpose({
 
             <template #node-custom="nodeProps">
                 <FlowNode v-bind="nodeProps" @action="emit('action', $event)" />
+            </template>
+
+            <template #edge-custom="edgeProps">
+                <ConnectionEdge v-bind="edgeProps" />
             </template>
         </VueFlow>
 
