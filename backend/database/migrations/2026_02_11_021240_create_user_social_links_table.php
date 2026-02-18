@@ -14,13 +14,11 @@ return new class extends Migration
         Schema::create('user_social_links', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('whatsapp')->nullable();
-            $table->string('instagram')->nullable();
-            $table->string('facebook')->nullable();
-            $table->string('linkedin')->nullable();
-            $table->string('email_contact')->nullable();
-            $table->string('website')->nullable();
+            $table->string('platform');
+            $table->string('value');
             $table->timestamps();
+
+            $table->unique(['user_id', 'platform']);
         });
     }
 

@@ -54,7 +54,8 @@ class ConnectedCoursesSeeder extends Seeder
             'title' => 'Introducción a las Ventas',
             'slug' => 'introduccion-ventas',
             'video_url' => 'https://example.com/ventas1.mp4',
-            'position' => 1,
+            'pos_x' => -100,
+            'pos_y' => 0,
             'is_start' => true,
         ]);
 
@@ -63,7 +64,8 @@ class ConnectedCoursesSeeder extends Seeder
             'type' => 'html',
             'title' => 'El Cierre',
             'content' => ['body' => '<h1>El Cierre</h1><p>Técnicas de cierre...</p>'],
-            'position' => 2,
+            'pos_x' => 100,
+            'pos_y' => 0,
             'is_end' => true,
         ]);
         // Create 3 More Courses

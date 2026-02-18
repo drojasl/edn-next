@@ -16,12 +16,15 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
             $table->string('type'); // video, form, meta, html, task
             $table->string('title');
+            $table->string('slug')->nullable();
             $table->json('content')->nullable(); // Flexible data
             $table->string('video_url')->nullable();
-            $table->integer('position')->default(0);
+            $table->integer('pos_x')->default(0);
+            $table->integer('pos_y')->default(0);
             $table->boolean('is_start')->default(false);
             $table->boolean('is_end')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

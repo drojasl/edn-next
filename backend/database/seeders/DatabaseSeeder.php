@@ -62,7 +62,8 @@ class DatabaseSeeder extends Seeder
             'title' => 'Video 1: Bienvenidos',
             'slug' => 'bienvenido-al-curso',
             'video_url' => 'https://example.com/video1.mp4',
-            'position' => 1,
+            'pos_x' => -200,
+            'pos_y' => 0,
             'is_start' => true,
         ]);
 
@@ -72,7 +73,8 @@ class DatabaseSeeder extends Seeder
             'title' => 'Video 2: Plan de Negocios',
             'slug' => 'plan-de-negocios',
             'video_url' => 'https://example.com/video2.mp4',
-            'position' => 2,
+            'pos_x' => 0,
+            'pos_y' => 0,
         ]);
 
         $node3 = CourseNode::create([
@@ -81,7 +83,8 @@ class DatabaseSeeder extends Seeder
             'title' => 'Felicidades',
             'slug' => 'felicidades-finalizado',
             'content' => ['body' => 'Has completado la introducción.'],
-            'position' => 3,
+            'pos_x' => 200,
+            'pos_y' => 0,
             'is_end' => true,
         ]);
 

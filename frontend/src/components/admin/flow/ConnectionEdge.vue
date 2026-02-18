@@ -28,7 +28,9 @@ const handleInput = (e: Event) => {
 }
 
 const handleBlurOrEnter = () => {
-    emit('label-change', inputValue.value)
+    if (inputValue.value !== props.label) {
+        emit('label-change', inputValue.value)
+    }
 }
 
 const inputRef = ref<HTMLInputElement | null>(null)

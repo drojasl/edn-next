@@ -22,6 +22,7 @@ const courses = ref<Course[]>([])
 const loading = ref(true)
 const router = useRouter()
 const { t } = useI18n()
+const isSaving = ref(false)
 
 const toastRef = ref<InstanceType<typeof AppToast> | null>(null)
 const modalRef = ref<InstanceType<typeof ConfirmationModal> | null>(null)
@@ -73,22 +74,34 @@ const handleAction = async ({ type, id }: { type: string, id: string }) => {
             isDestructive: true,
             confirmText: t('course.management.delete'),
             onConfirm: async () => {
+                isSaving.value = true
                 const response = await apiRequest({
                     method: 'DELETE',
                     url: `/v1/admin/courses/${id}`
                 })
                 if (response.success) {
                     showToast(t('course.management.delete_success'), 'success')
-                    fetchCourses()
+                    await fetchCourses()
                 } else {
                     showToast(response.error?.message || t('common.error'), 'error')
                 }
+                isSaving.value = false
             }
         })
     }
 }
 
-const handleSaveConnections = createStateDebouncer<CourseConnectionUpdate[]>(async (connections) => {
+const _saveConnections = createStateDebouncer<CourseConnectionUpdate[]>(async (connections) => {
+    await apiRequest({
+        method: 'POST',
+        url: '/v1/admin/courses/update-connections',
+        body: { connections }
+    })
+    isSaving.value = false
+})
+
+const handleSaveConnections = (connections: CourseConnectionUpdate[]) => {
+    isSaving.value = true
     // 1. Update local state immediately for instant validation feedback
     connections.forEach(update => {
         const course = courses.value.find(c => c.id === update.id)
@@ -97,33 +110,22 @@ const handleSaveConnections = createStateDebouncer<CourseConnectionUpdate[]>(asy
             course.next_course_label = update.next_course_label
         }
     })
+    _saveConnections(connections)
+}
 
-    // 2. Call API to save connections
-    const response = await apiRequest({
-        method: 'POST',
-        url: '/v1/admin/courses/update-connections',
-        body: { connections }
-    })
-    
-    if (response.success) {
-        if (import.meta.env.DEV) {
-            console.log('Connections saved')
-        }
-    } else {
-        showToast(response.error?.message || t('common.error'), 'error')
-    }
-})
-
-const handlePositionChange = createDebouncer<FlowNodeChange>(async (payload) => {
+const _updatePositions = createDebouncer<FlowNodeChange>(async (payload) => {
     await apiRequest({
         method: 'POST',
         url: '/v1/admin/courses/update-positions',
         body: { positions: payload }
     })
-    if (import.meta.env.DEV) {
-        console.log('Positions saved')
-    }
+    isSaving.value = false
 })
+
+const handlePositionChange = (payload: FlowNodeChange) => {
+    isSaving.value = true
+    _updatePositions(payload, 'id')
+}
 
 onMounted(() => {
     fetchCourses()
@@ -153,6 +155,7 @@ onUnmounted(() => {
             <CourseFlowEditor 
                 v-else 
                 :courses="courses" 
+                :is-saving="isSaving"
                 @save="handleSaveConnections"
                 @position-change="handlePositionChange"
                 @action="handleAction"

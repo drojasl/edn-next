@@ -20,10 +20,12 @@ const props = withDefaults(defineProps<{
     showSaveButton?: boolean
     nodeExtent?: [[number, number], [number, number]]
     allowMultipleOutputs?: boolean
+    isSaving?: boolean
 }>(), {
     showSaveButton: false,
     nodeExtent: undefined,
-    allowMultipleOutputs: false
+    allowMultipleOutputs: false,
+    isSaving: false
 })
 
 const emit = defineEmits(['save', 'node-change', 'connection-change', 'action'])
@@ -147,7 +149,7 @@ const onSave = () => {
 
 const handleLabelChange = async (edgeId: string, newLabel: string) => {
     const edge = edges.value.find(e => e.id === edgeId)
-    if (edge) {
+    if (edge && edge.label !== newLabel) {
         edge.label = newLabel
         await nextTick()
         emit('connection-change', { nodes: nodes.value, edges: edges.value })
@@ -162,6 +164,19 @@ defineExpose({
 
 <template>
     <div class="h-full w-full relative">
+        <!-- Blocking Overlay -->
+        <div 
+            v-if="isSaving" 
+            class="absolute inset-0 bg-white/20 backdrop-blur-[1px] z-50 flex items-center justify-center cursor-wait"
+            @click.stop
+            @mousedown.stop
+            @touchstart.stop
+        >
+            <div class="bg-white/80 p-3 rounded-full shadow-lg border border-slate-200">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+            </div>
+        </div>
+
         <VueFlow
             v-model:nodes="nodes"
             v-model:edges="edges"

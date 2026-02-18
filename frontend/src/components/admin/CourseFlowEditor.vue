@@ -14,6 +14,7 @@ interface Course {
 
 const props = defineProps<{
     courses: Course[]
+    isSaving?: boolean
 }>()
 
 const emit = defineEmits(['save', 'position-change', 'action'])
@@ -94,6 +95,7 @@ const handleSave = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
             :initialNodes="initialNodes"
             :initialEdges="initialEdges"
             :node-extent="nodeExtent"
+            :is-saving="isSaving"
             @save="handleSave"
             @connection-change="handleSave"
             @node-change="handleNodeChange"

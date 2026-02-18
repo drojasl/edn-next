@@ -17,8 +17,11 @@ return new class extends Migration
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
+            $table->integer('pos_x')->default(0);
+            $table->integer('pos_y')->default(0);
             $table->boolean('is_active')->default(true);
             $table->foreignId('next_course_id')->nullable()->constrained('courses')->onDelete('set null');
+            $table->string('next_course_label')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

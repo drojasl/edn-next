@@ -19,7 +19,6 @@ class CourseNode extends Model
         'slug',
         'content',
         'video_url',
-        'position',
         'pos_x',
         'pos_y',
         'is_start',
@@ -30,7 +29,6 @@ class CourseNode extends Model
         'content' => 'array',
         'is_start' => 'boolean',
         'is_end' => 'boolean',
-        'position' => 'integer',
         'pos_x' => 'integer',
         'pos_y' => 'integer',
     ];

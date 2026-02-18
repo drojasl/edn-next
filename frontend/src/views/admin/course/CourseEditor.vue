@@ -18,6 +18,7 @@ const initialNodes = ref<any[]>([])
 const initialEdges = ref<any[]>([])
 const loading = ref(true)
 const courseTitle = ref('')
+const isSaving = ref(false)
 
 // Define extent from config
 const nodeExtent = [[EDITOR_CONFIG.bounds.minX, EDITOR_CONFIG.bounds.minY], [EDITOR_CONFIG.bounds.maxX, EDITOR_CONFIG.bounds.maxY]] as [[number, number], [number, number]]
@@ -76,9 +77,7 @@ const fetchNodes = async () => {
 // Init composables
 const { createDebouncer, createStateDebouncer } = useDebounce(1000)
 
-const handleConnectionChange = createStateDebouncer<{ edges: any[] }>(async ({ edges }) => {
-    // Each edge represents ONE connection record in course_node_options
-    // No grouping needed - just map edges directly to connections
+const _saveConnections = createStateDebouncer<{ edges: any[] }>(async ({ edges }) => {
     const connections = edges.map(edge => ({
         source_node_id: parseInt(edge.source),
         target_node_id: parseInt(edge.target),
@@ -93,23 +92,33 @@ const handleConnectionChange = createStateDebouncer<{ edges: any[] }>(async ({ e
     
     // Sync local state to allow safe deletion check without full fetch
     initialEdges.value = edges
+    isSaving.value = false
 })
 
-const handlePositionChange = createDebouncer<FlowNodeChange>(async (payload) => {
+const handleConnectionChange = (data: { edges: any[] }) => {
+    isSaving.value = true
+    _saveConnections(data)
+}
+
+const _updatePositions = createDebouncer<FlowNodeChange>(async (payload) => {
     await apiRequest({
         method: 'POST',
         url: `/v1/admin/courses/${courseId}/nodes/update-positions`,
         body: { positions: payload }
     })
+    isSaving.value = false
+})
+
+const handlePositionChange = (payload: FlowNodeChange) => {
+    isSaving.value = true
+    _updatePositions(payload, 'id')
 
     // Sync local node positions for consistency
-    payload.forEach(p => {
-        const node = initialNodes.value.find(n => n.id === p.id.toString())
-        if (node) {
-            node.position = { x: p.pos_x, y: p.pos_y }
-        }
-    })
-})
+    const node = initialNodes.value.find(n => n.id === payload.id.toString())
+    if (node) {
+        node.position = { x: payload.pos_x, y: payload.pos_y }
+    }
+}
 
 
 const { t } = useI18n()
@@ -141,8 +150,9 @@ const addNode = async (type: string) => {
     })
 
     if (response.success) {
-        fetchNodes()
+        await fetchNodes()
     }
+    isSaving.value = false
 }
 
 const handleAction = async ({ type, id }: { type: string, id: string }) => {
@@ -154,6 +164,7 @@ const handleAction = async ({ type, id }: { type: string, id: string }) => {
         const newTitle = prompt(t('course.editor.prompts.node_title_edit'), node.data.title)
         if (!newTitle || newTitle === node.data.title) return
 
+        isSaving.value = true
         const response = await apiRequest({
             method: 'PUT',
             url: `/v1/admin/courses/${courseId}/nodes/${nodeId}`,
@@ -161,8 +172,9 @@ const handleAction = async ({ type, id }: { type: string, id: string }) => {
         })
 
         if (response.success) {
-            fetchNodes()
+            await fetchNodes()
         }
+        isSaving.value = false
     } else if (type === 'delete') {
         // 1. Check for connections (incoming or outgoing) in initialEdges
         const hasConnections = initialEdges.value.some(edge =>
@@ -180,6 +192,7 @@ const handleAction = async ({ type, id }: { type: string, id: string }) => {
             isDestructive: true,
             confirmText: t('course.management.delete'),
             onConfirm: async () => {
+                isSaving.value = true
                 const response = await apiRequest({
                     method: 'DELETE',
                     url: `/v1/admin/courses/${courseId}/nodes/${id}`
@@ -187,10 +200,11 @@ const handleAction = async ({ type, id }: { type: string, id: string }) => {
 
                 if (response.success) {
                     showToast(t('course.editor.delete_success'), 'success')
-                    fetchNodes()
+                    await fetchNodes()
                 } else {
                     showToast(response.error?.message || t('common.error'), 'error')
                 }
+                isSaving.value = false
             }
         })
     }
@@ -231,6 +245,7 @@ onMounted(() => {
                 :initialEdges="initialEdges"
                 :node-extent="nodeExtent"
                 :allowMultipleOutputs="true"
+                :is-saving="isSaving"
                 @node-change="handlePositionChange"
                 @connection-change="handleConnectionChange"
                 @action="handleAction"
