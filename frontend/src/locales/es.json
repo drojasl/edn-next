@@ -48,8 +48,10 @@
         "contact": "Contactar",
         "continue": "Continuar",
         "finish": "Finalizar Curso",
+        "next_course_default": "Siguiente Curso",
         "noLesson": "Selecciona una lección para comenzar",
         "preparing": "Preparando...",
+        "no_video_available": "Video no disponible",
         "editor": {
             "title": "Editor de Curso",
             "breadcrumbs": {
@@ -70,11 +72,35 @@
             "delete_confirm": "¿Estás seguro de que quieres eliminar este nodo?",
             "delete_success": "Nodo eliminado correctamente.",
             "delete_error_connected": "Para eliminar este nodo, primero debes desconectarlo de otros nodos (entrantes y salientes).",
-            "default_connection_label": "Continuar"
+            "default_connection_label": "Continuar",
+            "modal": {
+                "create_title": "Configurar Nueva Lección",
+                "edit_title": "Editar Lección",
+                "subtitle": "Define el tipo de contenido y los detalles de esta lección.",
+                "field_title": "Título de la lección",
+                "field_title_placeholder": "Ej: Introducción al Negocio",
+                "field_type": "Tipo de Contenido",
+                "field_description": "Descripción de la lección",
+                "field_description_placeholder": "Agrega una descripción, enlaces o documentos adicionales...",
+                "field_video_url": "URL del Video",
+                "tabs": {
+                    "video": "Lección Video",
+                    "form": "Registro / Form",
+                    "menu": "Menú / Botones"
+                },
+                "form_placeholder": "Este nodo servirá como punto de captura de datos.",
+                "menu_placeholder": "Este nodo mostrará opciones para que el usuario elija su camino.",
+                "save": "Guardar y Agregar al Mapa",
+                "success": "Curso creado exitosamente."
+            }
         },
         "management": {
             "title": "Gestión de Cursos",
             "new_course": "+ Nuevo Curso",
+            "modal": {
+                "subtitle": "Ingresa el nombre del curso para comenzar a diseñar tu mapa.",
+                "create_button": "Crear Curso e Ir al Editor"
+            },
             "edit": "Editar",
             "delete": "Eliminar",
             "delete_confirm": "¿Estás seguro de que quieres eliminar este curso?",
@@ -84,6 +110,7 @@
         },
         "node": {
             "default_type": "Nodo",
+            "description": "Descripción de la lección",
             "types": {
                 "video": "Video",
                 "form": "Formulario",

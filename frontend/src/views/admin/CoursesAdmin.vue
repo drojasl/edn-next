@@ -2,11 +2,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import CourseFlowEditor from '../../components/admin/CourseFlowEditor.vue'
 import { apiRequest } from '../../api/apiClient'
+import CourseCreateModal from '../../components/admin/CourseCreateModal.vue'
 import { useDebounce } from '../../composables/useDebounce'
 import AppToast from '../../components/common/AppToast.vue'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
+import CourseFlowEditor from '../../components/admin/CourseFlowEditor.vue'
 import type { FlowNodeChange, CourseConnectionUpdate } from '../../types/CourseFlow'
 
 interface Course {
@@ -26,6 +27,7 @@ const isSaving = ref(false)
 
 const toastRef = ref<InstanceType<typeof AppToast> | null>(null)
 const modalRef = ref<InstanceType<typeof ConfirmationModal> | null>(null)
+const createModalRef = ref<InstanceType<typeof CourseCreateModal> | null>(null)
 
 const showToast = (message: string, type: 'success' | 'error' = 'error') => {
     toastRef.value?.show(message, type)
@@ -33,6 +35,27 @@ const showToast = (message: string, type: 'success' | 'error' = 'error') => {
 
 const openModal = (config: any) => {
     modalRef.value?.open(config)
+}
+
+const openCreateModal = () => {
+    createModalRef.value?.open()
+}
+
+const handleCreateCourse = async (data: { title: string, description: string }) => {
+    isSaving.value = true
+    const response = await apiRequest({
+        method: 'POST',
+        url: '/v1/admin/courses',
+        body: data
+    })
+
+    if (response.success && response.data) {
+        showToast(t('course.editor.modal.success'), 'success')
+        router.push(`/admin/cursos/${response.data.data.id}/edit`)
+    } else {
+        showToast(response.error?.message || t('common.error'), 'error')
+    }
+    isSaving.value = false
 }
 
 const { createDebouncer, createStateDebouncer } = useDebounce(1000)
@@ -141,7 +164,10 @@ onUnmounted(() => {
         <header class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-slate-800">{{ $t('course.management.title') }}</h1>
             <div class="flex gap-2">
-                <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
+                <button 
+                    @click="openCreateModal"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-sm transition-all"
+                >
                     {{ $t('course.management.new_course') }}
                 </button>
             </div>
@@ -166,5 +192,6 @@ onUnmounted(() => {
         <!-- Reusable Components -->
         <AppToast ref="toastRef" />
         <ConfirmationModal ref="modalRef" />
+        <CourseCreateModal ref="createModalRef" @create="handleCreateCourse" />
     </div>
 </template>

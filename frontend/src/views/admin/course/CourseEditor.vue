@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import BaseFlowEditor from '../../../components/admin/flow/BaseFlowEditor.vue'
@@ -8,6 +8,7 @@ import { EDITOR_CONFIG } from '../../../config/constants'
 import AppToast from '../../../components/common/AppToast.vue'
 import ConfirmationModal from '../../../components/common/ConfirmationModal.vue'
 import { useDebounce } from '../../../composables/useDebounce'
+import NodeEditorModal, { type NodeData } from '../../../components/admin/course/NodeEditorModal.vue'
 import type { FlowNodeChange } from '../../../types/CourseFlow'
 import type { ModalConfig } from '../../../components/common/ConfirmationModal.vue'
 
@@ -19,6 +20,10 @@ const initialEdges = ref<any[]>([])
 const loading = ref(true)
 const courseTitle = ref('')
 const isSaving = ref(false)
+const isEditingTitle = ref(false)
+const tempCourseTitle = ref('')
+const titleInputRef = ref<HTMLInputElement | null>(null)
+const nodeModalRef = ref<InstanceType<typeof NodeEditorModal> | null>(null)
 
 // Define extent from config
 const nodeExtent = [[EDITOR_CONFIG.bounds.minX, EDITOR_CONFIG.bounds.minY], [EDITOR_CONFIG.bounds.maxX, EDITOR_CONFIG.bounds.maxY]] as [[number, number], [number, number]]
@@ -134,47 +139,90 @@ const openModal = (config: ModalConfig) => {
     modalRef.value?.open(config)
 }
 
-const addNode = async (type: string) => {
-    const title = prompt(t('course.editor.prompts.node_title'))
-    if (!title) return
+const openNodeModal = (data?: Partial<NodeData>) => {
+    nodeModalRef.value?.open(data)
+}
 
+const handleEditTitle = () => {
+    tempCourseTitle.value = courseTitle.value
+    isEditingTitle.value = true
+    nextTick(() => {
+        titleInputRef.value?.focus()
+    })
+}
+
+const saveTitle = async () => {
+    if (!tempCourseTitle.value.trim() || tempCourseTitle.value === courseTitle.value) {
+        isEditingTitle.value = false
+        return
+    }
+
+    isSaving.value = true
     const response = await apiRequest({
-        method: 'POST',
-        url: `/v1/admin/courses/${courseId}/nodes`,
-        body: {
-            title,
-            type,
-            pos_x: 100,
-            pos_y: 100
-        }
+        method: 'PUT',
+        url: `/v1/admin/courses/${courseId}`,
+        body: { title: tempCourseTitle.value.trim() }
     })
 
     if (response.success) {
+        courseTitle.value = tempCourseTitle.value.trim()
+        showToast(t('course.management.delete_success'), 'success') // Using generic success toast
+    } else {
+        showToast(response.error?.message || t('common.error'), 'error')
+    }
+    
+    isEditingTitle.value = false
+    isSaving.value = false
+}
+
+const handleNodeSave = async (formData: NodeData) => {
+    isSaving.value = true
+    
+    let response
+    if (formData.id) {
+        // Update existing
+        response = await apiRequest({
+            method: 'PUT',
+            url: `/v1/admin/courses/${courseId}/nodes/${formData.id}`,
+            body: formData
+        })
+    } else {
+        // Create new
+        response = await apiRequest({
+            method: 'POST',
+            url: `/v1/admin/courses/${courseId}/nodes`,
+            body: {
+                ...formData,
+                pos_x: 100,
+                pos_y: 100
+            }
+        })
+    }
+
+    if (response.success) {
         await fetchNodes()
+        showToast(
+            formData.id ? t('course.editor.delete_success') : t('course.editor.delete_success'), // Reuse for now or add new keys
+            'success'
+        )
+    } else {
+        showToast(response.error?.message || t('common.error'), 'error')
     }
     isSaving.value = false
 }
 
 const handleAction = async ({ type, id }: { type: string, id: string }) => {
     if (type === 'edit') {
-        const nodeId = parseInt(id)
         const node = initialNodes.value.find((n: any) => n.id === id)
         if (!node) return
 
-        const newTitle = prompt(t('course.editor.prompts.node_title_edit'), node.data.title)
-        if (!newTitle || newTitle === node.data.title) return
-
-        isSaving.value = true
-        const response = await apiRequest({
-            method: 'PUT',
-            url: `/v1/admin/courses/${courseId}/nodes/${nodeId}`,
-            body: { title: newTitle }
+        openNodeModal({
+            id: parseInt(id),
+            title: node.data.title,
+            type: node.data.type,
+            video_url: node.data.video_url,
+            content: node.data.content
         })
-
-        if (response.success) {
-            await fetchNodes()
-        }
-        isSaving.value = false
     } else if (type === 'delete') {
         // 1. Check for connections (incoming or outgoing) in initialEdges
         const hasConnections = initialEdges.value.some(edge =>
@@ -223,12 +271,38 @@ onMounted(() => {
                 <span class="text-slate-400"> </span>
                 <router-link to="/admin/cursos" class="text-lg font-bold hover:text-indigo-600 hover:underline">{{ $t('course.editor.breadcrumbs.courses') }}</router-link>
                 <span class="text-slate-400"> > </span>
-                <span class="font-medium text-slate-900">{{ courseTitle }}</span>
+                <div v-if="isEditingTitle" class="flex items-center">
+                    <input 
+                        ref="titleInputRef"
+                        v-model="tempCourseTitle"
+                        type="text"
+                        class="px-2 py-1 border border-indigo-500 rounded outline-none font-medium text-slate-900 bg-indigo-50"
+                        @blur="saveTitle"
+                        @keyup.enter="saveTitle"
+                        @keyup.esc="isEditingTitle = false"
+                    />
+                </div>
+                <span 
+                    v-else 
+                    class="font-medium text-slate-900 cursor-pointer hover:text-indigo-600 hover:bg-slate-100 px-2 py-1 rounded transition-colors flex items-center gap-2 group"
+                    @click="handleEditTitle"
+                >
+                    {{ courseTitle }}
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                    </svg>
+                </span>
             </div>
             <div class="flex gap-2">
-                <button @click="addNode('video')" class="px-3 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">{{ $t('course.editor.tools.video') }}</button>
-                <button @click="addNode('form')" class="px-3 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">{{ $t('course.editor.tools.form') }}</button>
-                <button @click="addNode('menu')" class="px-3 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">{{ $t('course.editor.tools.menu') }}</button>
+                <button 
+                    @click="openNodeModal()" 
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold text-sm shadow-sm transition-all flex items-center gap-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    {{ t('course.editor.modal.create_title') }}
+                </button>
             </div>
         </header>
 
@@ -255,5 +329,6 @@ onMounted(() => {
         <!-- Reusable Components -->
         <AppToast ref="toastRef" />
         <ConfirmationModal ref="modalRef" />
+        <NodeEditorModal ref="nodeModalRef" @save="handleNodeSave" />
     </div>
 </template>

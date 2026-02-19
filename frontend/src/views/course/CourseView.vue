@@ -15,8 +15,31 @@ const loading = ref(false)
 
 const handleContinue = () => {
   if (props.node?.is_end) {
-    // Handle course completion
-    console.log('Course completed')
+    if (props.course?.next_course?.slug) {
+      loading.value = true
+      const entrepreneurSlug = route.params.entrepreneurSlug
+      const nextCourseSlug = props.course.next_course.slug
+      
+      // Actualizar localStorage para permitir el acceso al siguiente curso
+      const accessData = localStorage.getItem('course_access')
+      if (accessData) {
+        try {
+          const parsed = JSON.parse(accessData)
+          parsed.courseSlug = nextCourseSlug
+          localStorage.setItem('course_access', JSON.stringify(parsed))
+        } catch (e) {
+          console.error('Error updating access data', e)
+        }
+      }
+      
+      // Redirigir al siguiente curso
+      // Nota: El backend ya devuelve el objeto nextCourse con su slug gracias al controller
+      router.push(`/cursos/${entrepreneurSlug}/${nextCourseSlug}`)
+      loading.value = false
+    } else {
+      // Handle course completion without next course
+      console.log('Course completed')
+    }
     return
   }
 
@@ -42,6 +65,14 @@ const handleContinue = () => {
     console.warn('No next node found in options')
   }
 }
+
+const getYoutubeId = (url: string) => {
+  if (!url) return null
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+  const match = url.match(regExp)
+  const videoId = match?.[2]
+  return (videoId && videoId.length === 11) ? videoId : null
+}
 </script>
 
 <template>
@@ -61,15 +92,31 @@ const handleContinue = () => {
     </div>
 
     <!-- Video Player (if type is video) -->
-    <div v-if="node.type === 'video'" class="aspect-video bg-slate-900 flex items-center justify-center">
-      <div class="relative w-full h-full flex items-center justify-center group cursor-pointer">
-        <!-- Placeholder for actual player (YouTube/Vimeo/etc) -->
-        <div class="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-             <div class="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-2xl">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white fill-current" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-             </div>
+    <div v-if="node.type === 'video'" class="flex flex-col flex-1 overflow-y-auto">
+      <div class="aspect-video bg-slate-900 shadow-inner">
+        <iframe 
+          v-if="getYoutubeId(node.video_url)"
+          class="w-full h-full"
+          :src="`https://www.youtube.com/embed/${getYoutubeId(node.video_url)}?rel=0&modestbranding=1`"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+        <div v-else class="w-full h-full flex items-center justify-center text-slate-500 italic">
+          {{ $t('course.no_video_available') || 'Video no disponible' }}
+        </div>
+      </div>
+
+      <!-- Description Section -->
+      <div v-if="node.content?.description" class="p-8 md:p-12 prose max-w-none flex-1">
+        <h3 class="text-slate-800 font-bold mb-4 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-indigo-500">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+          </svg>
+          {{ $t('course.node.description') || 'Descripción de la lección' }}
+        </h3>
+        <div class="text-slate-600 leading-relaxed whitespace-pre-wrap">
+          {{ node.content.description }}
         </div>
       </div>
     </div>
@@ -88,7 +135,7 @@ const handleContinue = () => {
     <div class="p-8 border-t border-slate-100 flex justify-center">
       <div class="w-full max-w-sm">
         <BaseButton 
-          :text="node.is_end ? 'Finalizar Curso' : 'Continuar'"
+          :text="node.is_end ? (course?.next_course_id ? (course.next_course_label || $t('course.next_course_default')) : $t('course.finish')) : $t('course.continue')"
           :action="handleContinue"
           :variant="node.is_end ? 'primary' : 'primary'"
           :extra-props="{

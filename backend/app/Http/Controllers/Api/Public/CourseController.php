@@ -27,7 +27,7 @@ class CourseController extends Controller
         $course = Course::where('user_id', $user->id)
             ->where('slug', $courseSlug)
             ->where('is_active', true)
-            ->with(['nodes.options', 'user.styleSettings', 'user.socialLinks'])
+            ->with(['nodes.options', 'user.styleSettings', 'user.socialLinks', 'nextCourse'])
             ->first();
 
         if (!$course) {

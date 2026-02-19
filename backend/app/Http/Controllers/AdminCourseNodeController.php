@@ -48,7 +48,14 @@ class AdminCourseNodeController extends Controller
         ]);
 
         $validated['course_id'] = $course->id;
-        $validated['slug'] = Str::slug($validated['title']) . '-' . uniqid(); // Ensure uniqueness
+        $slug = Str::slug($validated['title']);
+
+        // Ensure unique slug within the course
+        $count = CourseNode::where('course_id', $course->id)
+            ->where('slug', 'LIKE', "{$slug}%")
+            ->count();
+
+        $validated['slug'] = $count > 0 ? "{$slug}-" . ($count + 1) : $slug;
 
         $node = CourseNode::create($validated);
 
@@ -149,10 +156,10 @@ class AdminCourseNodeController extends Controller
         DB::transaction(function () use ($validated, $course) {
             // Get all node IDs for this course
             $nodeIds = CourseNode::where('course_id', $course->id)->pluck('id');
-            
+
             // Delete all existing connections for these nodes
             CourseNodeOption::whereIn('course_node_id', $nodeIds)->delete();
-            
+
             // Create new connections - each edge is one record
             foreach ($validated['connections'] as $conn) {
                 // Verify both nodes belong to this course

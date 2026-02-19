@@ -48,8 +48,10 @@
         "contact": "Contact",
         "continue": "Continue",
         "finish": "Finish Course",
+        "next_course_default": "Next Course",
         "noLesson": "Select a lesson to begin",
         "preparing": "Preparing...",
+        "no_video_available": "Video not available",
         "editor": {
             "title": "Course Editor",
             "breadcrumbs": {
@@ -84,6 +86,7 @@
         },
         "node": {
             "default_type": "Node",
+            "description": "Lesson description",
             "types": {
                 "video": "Video",
                 "form": "Form",

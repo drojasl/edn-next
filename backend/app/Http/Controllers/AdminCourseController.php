@@ -79,8 +79,7 @@ class AdminCourseController extends Controller
         ]);
 
         if (isset($validated['title'])) {
-            $validated['slug'] = Str::slug($validated['title']);
-            // Ensure unique slug logic if title changed (omitted for brevity, assume simple update for now)
+            // We keep the original slug to avoid breaking old URLs
         }
 
         $course->update($validated);

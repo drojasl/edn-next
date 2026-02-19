@@ -19,9 +19,11 @@ const entrepreneurData = ref<any>(null)
 const selectedNodeId = ref<number | null>(null)
 const selectedNodeSlug = ref<string | null>(null)
 const maxPositionReached = ref(0)
+const courseHistory = ref<string[]>([])
+const completedCourses = ref<string[]>([])
 
-const entrepreneurSlug = route.params.entrepreneurSlug as string
-const courseSlug = route.params.courseSlug as string
+const entrepreneurSlug = computed(() => route.params.entrepreneurSlug as string)
+const courseSlug = computed(() => route.params.courseSlug as string)
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
@@ -29,7 +31,7 @@ const toggleSidebar = () => {
 
 const selectNode = (node: any) => {
   if (isNodeDisabled(node)) return
-  router.push(`/cursos/${entrepreneurSlug}/${courseSlug}/${node.slug}`)
+  router.push(`/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${node.slug}`)
   if (isSidebarOpen.value) toggleSidebar()
 }
 
@@ -48,10 +50,44 @@ const activeNode = computed(() => {
   const node = courseData.value?.nodes?.find((n: any) => n.id === selectedNodeId.value)
   if (node && node.position > maxPositionReached.value) {
     maxPositionReached.value = node.position
-    localStorage.setItem(`course_progress_${courseSlug}`, node.position.toString())
+    localStorage.setItem(`course_progress_${courseSlug.value}`, node.position.toString())
+    
+    // Si es el nodo final, marcar el curso como completado
+    if (node.is_end) {
+      markCourseAsCompleted(courseSlug.value)
+    }
   }
   return node
 })
+
+const markCourseAsCompleted = (slug: string) => {
+  if (!completedCourses.value.includes(slug)) {
+    completedCourses.value.push(slug)
+    localStorage.setItem('completed_courses', JSON.stringify(completedCourses.value))
+  }
+}
+
+const addToCourseHistory = (slug: string) => {
+  if (!courseHistory.value.includes(slug)) {
+    courseHistory.value.push(slug)
+    localStorage.setItem('course_history', JSON.stringify(courseHistory.value))
+  }
+}
+
+const switchCourse = (slug: string) => {
+  if (slug === courseSlug.value) return
+  
+  // Actualizar acceso para el router/validación
+  const accessData = localStorage.getItem('course_access')
+  if (accessData) {
+    const parsed = JSON.parse(accessData)
+    parsed.courseSlug = slug
+    localStorage.setItem('course_access', JSON.stringify(parsed))
+  }
+  
+  router.push(`/cursos/${entrepreneurSlug.value}/${slug}`)
+  if (isSidebarOpen.value) toggleSidebar()
+}
 
 const isNodeDisabled = (node: any) => {
   if (!activeNode.value) return true
@@ -59,11 +95,42 @@ const isNodeDisabled = (node: any) => {
   return node.position >= activeNode.value.position
 }
 
+const initializeCourse = () => {
+  if (!validateAccess()) {
+    router.push('/cursos');
+    return;
+  }
+
+  // Cargar historial y completados
+  const history = localStorage.getItem('course_history')
+  if (history) courseHistory.value = JSON.parse(history)
+  
+  const completed = localStorage.getItem('completed_courses')
+  if (completed) completedCourses.value = JSON.parse(completed)
+
+  // Asegurar que el curso actual esté en el historial
+  addToCourseHistory(courseSlug.value)
+  
+  const savedProgress = localStorage.getItem(`course_progress_${courseSlug.value}`)
+  if (savedProgress) {
+    maxPositionReached.value = parseInt(savedProgress, 10)
+  } else {
+    maxPositionReached.value = 0
+  }
+  
+  fetchCourseData()
+}
+
+// Watch for course changes to re-initialize
+watch(courseSlug, () => {
+  initializeCourse()
+})
+
 const fetchCourseData = async () => {
   isLoading.value = true
   const result = await apiRequest({
     method: 'GET',
-    url: `/v1/public/courses/${entrepreneurSlug}/${courseSlug}`
+    url: `/v1/public/courses/${entrepreneurSlug.value}/${courseSlug.value}`
   });
 
   if (result.success && result.data) {
@@ -79,9 +146,9 @@ const fetchCourseData = async () => {
     } else {
       const startNode = courseData.value.nodes.find((n: any) => n.is_start)
       if (startNode) {
-        router.replace(`/cursos/${entrepreneurSlug}/${courseSlug}/${startNode.slug}`)
+        router.replace(`/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${startNode.slug}`)
       } else if (courseData.value.nodes.length > 0) {
-        router.replace(`/cursos/${entrepreneurSlug}/${courseSlug}/${courseData.value.nodes[0].slug}`)
+        router.replace(`/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${courseData.value.nodes[0].slug}`)
       }
     }
   } else {
@@ -98,24 +165,14 @@ const validateAccess = () => {
 
   try {
     const { entrepreneurSlug: storedEntrepreneur, courseSlug: storedCourse } = JSON.parse(accessData);
-    return storedEntrepreneur === entrepreneurSlug && storedCourse === courseSlug;
+    return storedEntrepreneur === entrepreneurSlug.value && storedCourse === courseSlug.value;
   } catch (e) {
     return false;
   }
 }
 
 onMounted(() => {
-  if (!validateAccess()) {
-    router.push('/cursos');
-    return;
-  }
-  
-  const savedProgress = localStorage.getItem(`course_progress_${courseSlug}`)
-  if (savedProgress) {
-    maxPositionReached.value = parseInt(savedProgress, 10)
-  }
-  
-  fetchCourseData()
+  initializeCourse()
 })
 
 const getSocialUrl = (platform: string, value: string) => {
@@ -174,44 +231,78 @@ const getSocialLabel = (platform: string, value: string) => {
         class="fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-slate-200"
         :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
       >
-        <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
-          <span class="font-bold text-lg">{{ t('course.sidebarTitle') }}</span>
-          <button @click="toggleSidebar" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <nav class="p-4 space-y-2 overflow-y-auto h-[calc(100vh-4rem)]">
-          <div 
-            v-for="node in courseData?.nodes" 
-            :key="node.id"
-            @click="selectNode(node)"
-            class="group flex items-center justify-between p-3 rounded-xl transition-all border border-transparent"
-            :class="[
-              selectedNodeId === node.id ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-slate-50 cursor-pointer hover:border-slate-100',
-              isNodeDisabled(node) ? 'opacity-50 grayscale pointer-events-none cursor-not-allowed bg-slate-50/50' : ''
-            ]"
-          >
-            <div class="flex items-center gap-3">
-              <div 
-                class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400"
-              >
-                <span>{{ node.position }}</span>
+        <div class="flex flex-col h-full">
+          <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100 flex-shrink-0">
+            <span class="font-bold text-lg">{{ t('course.sidebarTitle') }}</span>
+            <button @click="toggleSidebar" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div class="flex-1 overflow-y-auto p-4 space-y-6">
+            <!-- Selector de Cursos (Historial) -->
+            <div v-if="courseHistory.length > 1" class="space-y-2">
+              <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Mis Cursos</h3>
+              <div class="grid gap-1">
+                <button 
+                  v-for="slug in courseHistory" 
+                  :key="slug"
+                  @click="switchCourse(slug)"
+                  class="flex items-center gap-2 p-2 rounded-lg text-sm transition-all text-left"
+                  :class="slug === courseSlug ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'text-slate-600 hover:bg-slate-50'"
+                >
+                  <div 
+                    class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    :class="slug === courseSlug ? 'bg-white/20' : 'bg-slate-100'"
+                  >
+                    <svg v-if="completedCourses.includes(slug)" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span v-else class="text-[8px] font-bold">...</span>
+                  </div>
+                  <span class="truncate">{{ slug === courseSlug ? (courseData?.title || slug) : slug }}</span>
+                </button>
               </div>
-              <span class="text-sm font-medium text-slate-900">{{ node.title }}</span>
             </div>
-            <div v-if="node.type === 'video'" class="text-slate-300">
-              <svg v-if="isNodeDisabled(node) && node.position > (activeNode?.position || 0)" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              </svg>
+
+            <!-- Nodos del Curso Actual -->
+            <div class="space-y-2">
+              <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">{{ courseData?.title }}</h3>
+              <nav class="space-y-1">
+                <div 
+                  v-for="node in courseData?.nodes" 
+                  :key="node.id"
+                  @click="selectNode(node)"
+                  class="group flex items-center justify-between p-3 rounded-xl transition-all border border-transparent"
+                  :class="[
+                    selectedNodeId === node.id ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-slate-50 cursor-pointer hover:border-slate-100',
+                    isNodeDisabled(node) ? 'opacity-50 grayscale pointer-events-none cursor-not-allowed bg-slate-50/50' : ''
+                  ]"
+                >
+                  <div class="flex items-center gap-3">
+                    <div 
+                      class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400"
+                    >
+                      <span>{{ node.position }}</span>
+                    </div>
+                    <span class="text-sm font-medium text-slate-900">{{ node.title }}</span>
+                  </div>
+                  <div v-if="node.type === 'video'" class="text-slate-300">
+                    <svg v-if="isNodeDisabled(node) && node.position > (activeNode?.position || 0)" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    </svg>
+                  </div>
+                </div>
+              </nav>
             </div>
           </div>
-        </nav>
+        </div>
+
       </aside>
 
       <!-- Overlay for Sidebar -->

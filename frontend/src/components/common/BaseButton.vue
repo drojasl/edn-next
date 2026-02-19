@@ -24,7 +24,7 @@ const handleClick = () => {
     @click="handleClick"
     :type="extraProps?.type || 'button'"
     :class="[
-      'w-full py-5 rounded-2xl font-black text-xl transition-all transform active:scale-[0.98] flex items-center justify-center shadow-2xl',
+      'cursor-pointer w-full py-5 rounded-2xl font-black text-xl transition-all transform active:scale-[0.98] flex items-center justify-center shadow-2xl',
       variant === 'primary' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-400 hover:to-purple-500 hover:scale-[1.02]' : '',
       extraProps?.disabled || extraProps?.loading ? 'opacity-30 cursor-not-allowed scale-100' : ''
     ]"
