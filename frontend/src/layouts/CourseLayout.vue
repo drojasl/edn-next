@@ -21,6 +21,10 @@ const selectedNodeSlug = ref<string | null>(null)
 const maxPositionReached = ref(0)
 const courseHistory = ref<string[]>([])
 const completedCourses = ref<string[]>([])
+const showRecoveryModal = ref(false)
+const recoveryEmail = ref('')
+const recovering = ref(false)
+const recoveryError = ref('')
 
 const entrepreneurSlug = computed(() => route.params.entrepreneurSlug as string)
 const courseSlug = computed(() => route.params.courseSlug as string)
@@ -52,6 +56,12 @@ const activeNode = computed(() => {
     maxPositionReached.value = node.position
     localStorage.setItem(`course_progress_${courseSlug.value}`, node.position.toString())
     
+    // Si ya tenemos el email del prospecto, sincronizar con el backend
+    const prospectEmail = localStorage.getItem('prospect_email')
+    if (prospectEmail) {
+      syncCurrentProgress(prospectEmail)
+    }
+
     // Si es el nodo final, marcar el curso como completado
     if (node.is_end) {
       markCourseAsCompleted(courseSlug.value)
@@ -59,6 +69,39 @@ const activeNode = computed(() => {
   }
   return node
 })
+
+const syncCurrentProgress = async (email: string) => {
+  const accessDataRaw = localStorage.getItem('course_access')
+  let code = ''
+  if (accessDataRaw) {
+    try {
+      const accessData = JSON.parse(accessDataRaw)
+      code = accessData.accessCode
+    } catch (e) {
+       console.error(e)
+    }
+  }
+  
+  if (!code) return
+
+  // Recopilar progreso actual
+  const progress: Record<string, number> = {}
+  courseHistory.value.forEach(slug => {
+    const saved = localStorage.getItem(`course_progress_${slug}`)
+    if (saved) progress[slug] = parseInt(saved, 10)
+  })
+
+  await apiRequest({
+    method: 'POST',
+    url: '/v1/public/prospect/sync',
+    body: {
+      email,
+      code,
+      progress,
+      completed: completedCourses.value
+    }
+  })
+}
 
 const markCourseAsCompleted = (slug: string) => {
   if (!completedCourses.value.includes(slug)) {
@@ -174,6 +217,71 @@ const validateAccess = () => {
 onMounted(() => {
   initializeCourse()
 })
+
+const handleRecoverProgress = async () => {
+  if (!recoveryEmail.value) return
+  recovering.value = true
+  recoveryError.value = ''
+  
+  const accessDataRaw = localStorage.getItem('course_access')
+  let code = ''
+  if (accessDataRaw) {
+    try {
+      const accessData = JSON.parse(accessDataRaw)
+      code = accessData.accessCode
+    } catch (e) {
+      console.error('Error parsing access data', e)
+    }
+  }
+
+  if (!code) {
+    recoveryError.value = 'Código de acceso no encontrado.'
+    recovering.value = false
+    return
+  }
+
+  const result = await apiRequest({
+    method: 'POST',
+    url: '/v1/public/prospect/recover',
+    body: {
+      email: recoveryEmail.value,
+      code
+    }
+  })
+
+  if (result.success && result.data) {
+    const { progress, completed, history } = result.data
+    
+    // Nodes progress
+    if (progress) {
+      Object.entries(progress).forEach(([slug, pos]) => {
+        localStorage.setItem(`course_progress_${slug}`, String(pos))
+      })
+    }
+    
+    // Completed courses
+    if (completed) {
+      localStorage.setItem('completed_courses', JSON.stringify(completed))
+    }
+    
+    // History
+    if (history && history.length > 0) {
+      localStorage.setItem('course_history', JSON.stringify(history))
+    }
+    
+    // Guardar email para futuras sincronizaciones
+    localStorage.setItem('prospect_email', recoveryEmail.value)
+    
+    showRecoveryModal.value = false
+    recoveryEmail.value = ''
+    
+    // Recargar todo el estado
+    initializeCourse()
+  } else {
+    recoveryError.value = result.error?.message || 'No se encontró progreso para este correo.'
+  }
+  recovering.value = false
+}
 
 const getSocialUrl = (platform: string, value: string) => {
   const p = platform.toLowerCase()
@@ -300,9 +408,68 @@ const getSocialLabel = (platform: string, value: string) => {
                 </div>
               </nav>
             </div>
+
+            <!-- Botón de Retomar Progreso -->
+            <div class="pt-4 border-t border-slate-100">
+              <button 
+                @click="showRecoveryModal = true"
+                class="w-full flex items-center justify-center gap-2 p-3 text-sm font-bold text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all border border-transparent hover:border-indigo-100 group"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retomar Progreso
+              </button>
+            </div>
           </div>
         </div>
 
+        <!-- Recovery Modal -->
+        <div v-if="showRecoveryModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showRecoveryModal = false"></div>
+          <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+            <div class="p-6 border-b border-slate-100">
+              <h3 class="text-xl font-bold text-slate-900">Retomar Progreso</h3>
+              <p class="text-sm text-slate-500 mt-1">Ingresa el correo que usaste anteriormente para recuperar tu avance.</p>
+            </div>
+            
+            <form @submit.prevent="handleRecoverProgress" class="p-6 space-y-4">
+              <div class="space-y-2">
+                <label for="recovery-email" class="block text-sm font-bold text-slate-700 ml-1">Correo Electrónico</label>
+                <input 
+                  type="email" 
+                  id="recovery-email" 
+                  v-model="recoveryEmail"
+                  placeholder="ejemplo@correo.com"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                  required
+                />
+              </div>
+              
+              <div v-if="recoveryError" class="p-3 bg-rose-50 text-rose-600 rounded-xl text-xs font-medium border border-rose-100">
+                {{ recoveryError }}
+              </div>
+              
+              <div class="flex gap-3 pt-2">
+                <button 
+                  type="button" 
+                  @click="showRecoveryModal = false"
+                  class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <BaseButton 
+                  text="Recuperar"
+                  type="submit"
+                  :extra-props="{
+                    loading: recovering,
+                    class: 'flex-[2] shadow-lg shadow-indigo-100'
+                  }"
+                />
+              </div>
+            </form>
+          </div>
+        </div>
       </aside>
 
       <!-- Overlay for Sidebar -->

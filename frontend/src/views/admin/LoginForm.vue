@@ -46,7 +46,7 @@ const validateForm = (): boolean => {
     errors.value.password = t('auth.errors.required')
     isValid = false
   } else if (password.value.length < 6) {
-    errors.value.password = 'Mínimo 6 caracteres'
+    errors.value.password = t('auth.errors.min_length') || 'Mínimo 6 caracteres'
     isValid = false
   }
 

@@ -14,7 +14,8 @@
             "required": "Este campo es requerido",
             "invalidCredentials": "Código Amway o contraseña incorrectos",
             "serverError": "Error del servidor. Intenta nuevamente.",
-            "networkError": "Error de conexión. Verifica tu internet."
+            "networkError": "Error de conexión. Verifica tu internet.",
+            "min_length": "Mínimo 6 caracteres"
         }
     },
     "common": {
@@ -91,6 +92,8 @@
                 "form_placeholder": "Este nodo servirá como punto de captura de datos.",
                 "menu_placeholder": "Este nodo mostrará opciones para que el usuario elija su camino.",
                 "save": "Guardar y Agregar al Mapa",
+                "form_fields_title": "Campos del Formulario",
+                "selected": "Seleccionados",
                 "success": "Curso creado exitosamente."
             }
         },
@@ -107,6 +110,19 @@
             "delete_success": "Curso eliminado correctamente.",
             "delete_error_connected": "Para eliminar este curso, primero debes desconectarlo de otros cursos (entradas y salidas).",
             "delete_connection_confirm": "¿Estás seguro de que quieres eliminar esta conexión?"
+        },
+        "form": {
+            "title": "Introduce tus datos",
+            "submit": "Enviar y continuar",
+            "contact_me": "Contáctame",
+            "fields": {
+                "name": "Nombre Completo",
+                "country": "País",
+                "city": "Ciudad",
+                "email": "Correo Electrónico",
+                "phone": "Teléfono / Celular",
+                "accept_terms": "Acepto recibir información"
+            }
         },
         "node": {
             "default_type": "Nodo",

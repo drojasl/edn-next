@@ -82,6 +82,24 @@ const fetchNodes = async () => {
 // Init composables
 const { createDebouncer, createStateDebouncer } = useDebounce(1000)
 
+const syncNodesData = (updatedNodes: any[]) => {
+    initialNodes.value.forEach(node => {
+        const serverNode = updatedNodes.find((n: any) => n.id.toString() === node.id)
+        if (serverNode) {
+            node.data = {
+                ...node.data,
+                isStart: serverNode.is_start,
+                isEnd: serverNode.is_end,
+                options: serverNode.options,
+                title: serverNode.title,
+                type: serverNode.type,
+                video_url: serverNode.video_url,
+                content: serverNode.content
+            }
+        }
+    })
+}
+
 const _saveConnections = createStateDebouncer<{ edges: any[] }>(async ({ edges }) => {
     const connections = edges.map(edge => ({
         source_node_id: parseInt(edge.source),
@@ -89,14 +107,21 @@ const _saveConnections = createStateDebouncer<{ edges: any[] }>(async ({ edges }
         label: edge.label || t('course.editor.default_connection_label')
     }))
 
-    await apiRequest({
+    const response = await apiRequest({
         method: 'POST',
         url: `/v1/admin/courses/${courseId}/nodes/update-connections`,
         body: { connections }
     })
     
-    // Sync local state to allow safe deletion check without full fetch
-    initialEdges.value = edges
+    if (response.success && response.data) {
+        // Sync flags without re-initializing the flow
+        syncNodesData(response.data.data)
+        
+        // Update local edges too to match the labels/ids from server if necessary
+        // but edges are usually fine as is from the UI
+        initialEdges.value = edges
+    }
+    
     isSaving.value = false
 })
 

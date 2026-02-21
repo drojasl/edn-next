@@ -52,35 +52,79 @@ onMounted(async () => {
     isInitializing.value = false
 })
 
+const isInternalUpdate = ref(false)
+
 watch(() => [props.initialNodes, props.initialEdges] as const, async (newVal) => {
+    if (isInternalUpdate.value) return
+
     const [newNodes, newEdges] = newVal
     
-    // Check if nodes changed significantly
-    const nodesChanged = JSON.stringify(newNodes) !== JSON.stringify(nodes.value)
+    // More precise change detection
+    const oldIds = nodes.value.map(n => n.id).sort().join(',')
+    const newIds = newNodes.map(n => n.id).sort().join(',')
     
-    if (nodesChanged) {
-        console.log('Nodes changed, re-initializing flow.')
+    const structuralChange = oldIds !== newIds || 
+                           nodes.value.length !== newNodes.length ||
+                           newNodes.some((n, i) => n.type !== nodes.value[i]?.type)
+
+    if (structuralChange) {
+        console.log('Nodes structure changed, re-initializing flow.')
         isInitializing.value = true
-        nodes.value = newNodes
+        nodes.value = JSON.parse(JSON.stringify(newNodes))
         edges.value = []
         await nextTick()
-        await new Promise(resolve => setTimeout(resolve, 100)) // Give Vue Flow time to register new nodes
-        edges.value = newEdges
+        await new Promise(resolve => setTimeout(resolve, 100))
+        edges.value = JSON.parse(JSON.stringify(newEdges))
         await nextTick()
         isInitializing.value = false
-    } else if (JSON.stringify(newEdges) !== JSON.stringify(edges.value)) {
-        console.log('Edges changed, updating edges.')
-        // Just update edges if nodes are standard
-        edges.value = newEdges
+    } else {
+        // Just update metadata in place
+        newNodes.forEach(newNode => {
+            const existingNode = nodes.value.find(n => n.id === newNode.id)
+            if (existingNode) {
+                // Update position only if it's significantly different
+                if (Math.abs(existingNode.position.x - newNode.position.x) > 1 || 
+                    Math.abs(existingNode.position.y - newNode.position.y) > 1) {
+                    existingNode.position = { ...newNode.position }
+                }
+                // Update data (flags, options, etc)
+                existingNode.data = { ...newNode.data }
+            }
+        })
+
+        // Edge comparison: simplified to avoid recursive triggers 
+        // from Vue Flow's internal reactive additions
+        const simplifiedOldEdges = edges.value.map(e => `${e.source}-${e.target}-${e.label}`)
+        const simplifiedNewEdges = newEdges.map(e => `${e.source}-${e.target}-${e.label}`)
+        
+        if (JSON.stringify(simplifiedOldEdges) !== JSON.stringify(simplifiedNewEdges)) {
+            edges.value = JSON.parse(JSON.stringify(newEdges))
+        }
     }
 }, { deep: true })
 
+// Helper to emit changes without triggering the watcher loop
+const wrapInternalUpdate = async (fn: () => Promise<void> | void) => {
+    isInternalUpdate.value = true
+    try {
+        await fn()
+    } finally {
+        // Use timeout to ensure the watcher's microtask queue is cleared
+        await nextTick()
+        setTimeout(() => {
+            isInternalUpdate.value = false
+        }, 50)
+    }
+}
+
 // Emit individual node changes (for position)
 onNodeDragStop(({ node }) => {
-    emit('node-change', {
-        id: parseInt(node.id),
-        pos_x: Math.round(node.position.x),
-        pos_y: Math.round(node.position.y)
+    wrapInternalUpdate(() => {
+        emit('node-change', {
+            id: parseInt(node.id),
+            pos_x: Math.round(node.position.x),
+            pos_y: Math.round(node.position.y)
+        })
     })
 })
 
@@ -93,57 +137,69 @@ onConnect(async (params: Connection) => {
 
     const customEdge = {
         ...params,
-        label: t('course.editor.default_connection_label'), // ✅ Dynamic label based on locale
+        label: t('course.editor.default_connection_label'),
         type: 'custom',
         animated: true
     } as Edge
+    
     addEdges([customEdge])
     await nextTick()
-    emit('connection-change', { nodes: nodes.value, edges: edges.value })
+    
+    wrapInternalUpdate(() => {
+        emit('connection-change', { 
+            nodes: JSON.parse(JSON.stringify(nodes.value)), 
+            edges: JSON.parse(JSON.stringify(edges.value)) 
+        })
+    })
 })
 
-// Handle edge updates (moving an existing connection)
+// Handle edge updates
 onEdgeUpdate(async ({ edge, connection }) => {
     const updatedConnection = {
         ...connection,
         type: 'custom',
         animated: true
     } as Connection
+    
     updateEdge(edge, updatedConnection)
     await nextTick()
-    emit('connection-change', { nodes: nodes.value, edges: edges.value })
+    
+    wrapInternalUpdate(() => {
+        emit('connection-change', { 
+            nodes: JSON.parse(JSON.stringify(nodes.value)), 
+            edges: JSON.parse(JSON.stringify(edges.value)) 
+        })
+    })
 })
 
-// Handle edge clicks (optional, currently not used)
+// Handle edge removal
 onEdgesChange(async (changes) => {
     const hasRemoval = changes.some(c => c.type === 'remove')
     if (hasRemoval && !isInitializing.value) {
         await nextTick()
-        emit('connection-change', { nodes: nodes.value, edges: edges.value })
+        wrapInternalUpdate(() => {
+            emit('connection-change', { 
+                nodes: JSON.parse(JSON.stringify(nodes.value)), 
+                edges: JSON.parse(JSON.stringify(edges.value)) 
+            })
+        })
     }
 })
 
-// Validation: Configurable based on allowMultipleOutputs
+// Validation
 const isValidConnection = (connection: Connection) => {
-    // During initialization, everything is valid (since we're loading from DB)
     if (isInitializing.value) return true
-
-    // If multiple outputs allowed, always valid (for nodes)
     if (props.allowMultipleOutputs) return true
-    
-    // Restricted to 1 outgoing connection (for courses)
-    // Check if source already has a DIFFERENT outgoing edge
     const sourceHasAnotherEdge = edges.value.some(edge => 
         edge.source === connection.source && edge.target !== connection.target
     )
-    
     return !sourceHasAnotherEdge
 }
 
 const onSave = () => {
     emit('save', {
-        nodes: nodes.value,
-        edges: edges.value
+        nodes: JSON.parse(JSON.stringify(nodes.value)),
+        edges: JSON.parse(JSON.stringify(edges.value))
     })
 }
 
@@ -152,7 +208,10 @@ const handleLabelChange = async (edgeId: string, newLabel: string) => {
     if (edge && edge.label !== newLabel) {
         edge.label = newLabel
         await nextTick()
-        emit('connection-change', { nodes: nodes.value, edges: edges.value })
+        emit('connection-change', { 
+            nodes: JSON.parse(JSON.stringify(nodes.value)), 
+            edges: JSON.parse(JSON.stringify(edges.value)) 
+        })
     }
 }
 
