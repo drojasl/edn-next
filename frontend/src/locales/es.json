@@ -8,15 +8,57 @@
             "password": "Contraseña",
             "passwordPlaceholder": "Ingresa tu contraseña",
             "submit": "Iniciar Sesión",
-            "loading": "Iniciando sesión..."
+            "loading": "Iniciando sesión...",
+            "noAccount": "¿No tienes una cuenta?",
+            "register": "Regístrate aquí"
+        },
+        "register": {
+            "title": "Registro de Empresario",
+            "subtitle": "Crea tu cuenta para comenzar a gestionar tus cursos",
+            "hasAccount": "¿Ya tienes una cuenta?",
+            "confirmPassword": "Confirmar Contraseña"
         },
         "errors": {
             "required": "Este campo es requerido",
             "invalidCredentials": "Código Amway o contraseña incorrectos",
             "serverError": "Error del servidor. Intenta nuevamente.",
             "networkError": "Error de conexión. Verifica tu internet.",
-            "min_length": "Mínimo 6 caracteres"
+            "min_length": "Mínimo 6 caracteres",
+            "min_length_8": "Mínimo 8 caracteres",
+            "password_mismatch": "Las contraseñas no coinciden",
+            "invalid_email": "Correo electrónico inválido"
         }
+    },
+    "admin": {
+        "users": {
+            "title": "Gestión de Empresarios",
+            "subtitle": "Cierra brechas educativas gestionando tus usuarios",
+            "add_new": "Nuevo Empresario",
+            "create_title": "Crear Nuevo Empresario",
+            "edit_title": "Editar Empresario",
+            "name": "Nombre",
+            "last_name": "Apellido",
+            "email": "Correo Electrónico",
+            "slug": "Slug del Perfil (ej: diego-perez)",
+            "is_active": "Cuenta Activa",
+            "submit": "Crear Empresario",
+            "update": "Actualizar Empresario",
+            "slug_available": "Slug disponible",
+            "slug_taken": "Slug ya está en uso",
+            "confirm_delete": "¿Estás seguro de que quieres eliminar este empresario?",
+            "no_users": "No hay empresarios registrados aún.",
+            "amway_code_readonly": "El código de empresario no se puede cambiar."
+        }
+    },
+    "profile": {
+        "title": "Mi Perfil",
+        "subtitle": "Gestiona tu información personal y de acceso.",
+        "personal_info": "Información de la Cuenta",
+        "update_title": "Actualizar Perfil",
+        "update_success": "Perfil actualizado correctamente",
+        "role": "Empresario Amway",
+        "amway_code": "Código Amway",
+        "slug_label": "Slug del Perfil"
     },
     "common": {
         "language": "Idioma",
@@ -24,7 +66,8 @@
         "english": "English",
         "confirm": "Confirmar",
         "cancel": "Cancelar",
-        "error": "Ha ocurrido un error. Inténtalo de nuevo."
+        "error": "Ha ocurrido un error. Inténtalo de nuevo.",
+        "back_to_list": "Volver al listado"
     },
     "toast": {
         "error_title": "Acción Requerida",

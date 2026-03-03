@@ -26,7 +26,7 @@ class AdminCourseNodeController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $nodes,
+            'data' => $this->formatNodes($nodes),
             'course' => $course
         ]);
     }
@@ -43,6 +43,7 @@ class AdminCourseNodeController extends Controller
             'type' => 'required|string|in:' . implode(',', CourseNode::TYPES),
             'content' => 'nullable|array',
             'video_url' => 'nullable|string',
+            'position' => 'nullable|integer',
             'pos_x' => 'nullable|integer',
             'pos_y' => 'nullable|integer',
         ]);
@@ -59,9 +60,13 @@ class AdminCourseNodeController extends Controller
 
         $node = CourseNode::create($validated);
 
+        // Auto-validate start/end status
+        $this->revalidateNodesStatus($course->id);
+        $node->refresh();
+
         return response()->json([
             'success' => true,
-            'data' => $node
+            'data' => $this->formatNode($node)
         ], 201);
     }
 
@@ -78,6 +83,7 @@ class AdminCourseNodeController extends Controller
             'type' => 'sometimes|required|string',
             'content' => 'nullable|array',
             'video_url' => 'nullable|string',
+            'position' => 'nullable|integer',
             'is_start' => 'boolean',
             'is_end' => 'boolean',
         ]);
@@ -88,9 +94,13 @@ class AdminCourseNodeController extends Controller
 
         $node->update($validated);
 
+        // Auto-validate start/end status
+        $this->revalidateNodesStatus($courseId);
+        $node->refresh();
+
         return response()->json([
             'success' => true,
-            'data' => $node
+            'data' => $this->formatNode($node)
         ]);
     }
 
@@ -101,6 +111,9 @@ class AdminCourseNodeController extends Controller
     {
         $node = CourseNode::where('course_id', $courseId)->findOrFail($nodeId);
         $node->delete();
+
+        // Auto-validate start/end status for remaining nodes
+        $this->revalidateNodesStatus($courseId);
 
         return response()->json([
             'success' => true,
@@ -178,12 +191,86 @@ class AdminCourseNodeController extends Controller
                     ]);
                 }
             }
+
+            // Auto-validate start/end status
+            $this->revalidateNodesStatus($course->id);
         });
+
+        // Return updated nodes for the course
+        $nodes = CourseNode::where('course_id', $course->id)->with('options')->get();
 
         return response()->json([
             'success' => true,
-            'message' => 'Node connections updated successfully'
+            'message' => 'Node connections updated successfully',
+            'data' => $this->formatNodes($nodes)
         ]);
+    }
+
+    /**
+     * Revalidate is_start and is_end status for all nodes in a course.
+     */
+    private function revalidateNodesStatus($courseId)
+    {
+        $course = $this->resolveCourse($courseId);
+        $nodes = CourseNode::where('course_id', $course->id)->get();
+        $nodeIds = $nodes->pluck('id')->toArray();
+
+        // Nodes that have incoming connections (targets)
+        $nodesWithIncoming = CourseNodeOption::whereIn('next_node_id', $nodeIds)
+            ->whereNotNull('next_node_id')
+            ->distinct()
+            ->pluck('next_node_id')
+            ->toArray();
+
+        // Nodes that have outgoing connections (sources)
+        $nodesWithOutgoing = CourseNodeOption::whereIn('course_node_id', $nodeIds)
+            ->whereNotNull('next_node_id')
+            ->distinct()
+            ->pluck('course_node_id')
+            ->toArray();
+
+        foreach ($nodes as $node) {
+            $isStart = !in_array($node->id, $nodesWithIncoming);
+            $isEnd = !in_array($node->id, $nodesWithOutgoing);
+
+            // Only update if changed to avoid unnecessary queries
+            if ($node->is_start !== $isStart || $node->is_end !== $isEnd) {
+                $node->update([
+                    'is_start' => $isStart,
+                    'is_end' => $isEnd
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Format nodes for frontend consistency.
+     */
+    private function formatNodes($nodes)
+    {
+        return $nodes->map(fn($node) => $this->formatNode($node));
+    }
+
+    /**
+     * Format a single node for frontend consistency.
+     */
+    private function formatNode($node)
+    {
+        return [
+            'id' => $node->id,
+            'course_id' => $node->course_id,
+            'type' => $node->type,
+            'title' => $node->title,
+            'slug' => $node->slug,
+            'content' => $node->content,
+            'video_url' => $node->video_url,
+            'position' => (int) $node->position,
+            'pos_x' => (int) $node->pos_x,
+            'pos_y' => (int) $node->pos_y,
+            'is_start' => (bool) $node->is_start,
+            'is_end' => (bool) $node->is_end,
+            'options' => $node->options
+        ];
     }
 
     /**

@@ -303,6 +303,13 @@ const getSocialLabel = (platform: string, value: string) => {
   if (p === 'website') return value.replace('https://', '').replace('http://', '')
   return value
 }
+
+const getFullUrl = (path: string | null) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:8000'
+  return `${baseUrl}${path}`
+}
 </script>
 
 <template>
@@ -496,7 +503,10 @@ const getSocialLabel = (platform: string, value: string) => {
       <div class="max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
-            <img :src="`https://ui-avatars.com/api/?name=${entrepreneurData?.name}+${entrepreneurData?.last_name}&background=random`" alt="Avatar" class="w-full h-full object-cover" />
+            <img v-if="entrepreneurData?.profile_picture" 
+                 :src="getFullUrl(entrepreneurData.profile_picture)" 
+                 alt="Avatar" class="w-full h-full object-cover" />
+            <img v-else :src="`https://ui-avatars.com/api/?name=${entrepreneurData?.name}+${entrepreneurData?.last_name}&background=random`" alt="Avatar" class="w-full h-full object-cover" />
           </div>
           <div>
             <div class="font-bold text-slate-900 leading-tight">{{ entrepreneurData?.name }} {{ entrepreneurData?.last_name }}</div>

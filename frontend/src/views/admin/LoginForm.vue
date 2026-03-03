@@ -193,6 +193,19 @@ const handleLogin = async () => {
             }"
           />
         </form>
+
+        <!-- Register Link -->
+        <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+          <p class="text-sm text-gray-600">
+            {{ t('auth.login.noAccount') || '¿No tienes una cuenta?' }}
+            <router-link
+              to="/admin/register"
+              class="ml-2 font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
+            >
+              {{ t('auth.login.register') || 'Regístrate aquí' }}
+            </router-link>
+          </p>
+        </div>
       </div>
     </div>
   </div>

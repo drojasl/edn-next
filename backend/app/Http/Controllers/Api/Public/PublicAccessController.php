@@ -59,6 +59,7 @@ class PublicAccessController extends Controller
         return response()->json([
             'entrepreneurSlug' => $user->slug,
             'courseSlug' => $course->slug,
+            'code' => $accessCode->code,
         ]);
     }
 }

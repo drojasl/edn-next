@@ -19,18 +19,20 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'last_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'codigo_amway' => 'nullable|string|max:20',
+            'codigo_amway' => 'required|string|max:20',
+            'is_account_holder' => 'required|boolean',
+            'slug' => 'nullable|string|max:255|unique:users',
         ]);
 
-        $user = $this->authService->register($validated);
+        $entrepreneur = $this->authService->register($validated);
 
         return response()->json([
-            'message' => 'User registered successfully',
-            'user' => $user,
-            'token' => $user->createToken('auth_token')->plainTextToken,
+            'message' => 'Entrepreneur registered successfully',
+            'user' => $entrepreneur,
+            'token' => $entrepreneur->createToken('auth_token')->plainTextToken,
         ], 201);
     }
 

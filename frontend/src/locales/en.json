@@ -18,6 +18,16 @@
             "min_length": "Minimum 6 characters"
         }
     },
+    "profile": {
+        "title": "My Profile",
+        "subtitle": "Manage your personal and account information.",
+        "personal_info": "Account Information",
+        "update_title": "Update Profile",
+        "update_success": "Profile updated successfully",
+        "role": "Amway Entrepreneur",
+        "amway_code": "Amway Code",
+        "slug_label": "Profile Slug"
+    },
     "common": {
         "language": "Language",
         "spanish": "Spanish",

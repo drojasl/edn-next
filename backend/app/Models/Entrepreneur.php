@@ -33,6 +33,7 @@ class Entrepreneur extends Authenticatable
         'is_account_holder',
         'is_active',
         'slug',
+        'profile_picture',
     ];
 
     /**

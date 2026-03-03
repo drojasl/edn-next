@@ -33,7 +33,7 @@ class Course extends Model
 
     public function nodes()
     {
-        return $this->hasMany(CourseNode::class);
+        return $this->hasMany(CourseNode::class)->orderBy('position');
     }
 
     public function nextCourse()

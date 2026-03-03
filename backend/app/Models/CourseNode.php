@@ -17,6 +17,7 @@ class CourseNode extends Model
         'type',
         'title',
         'slug',
+        'position',
         'content',
         'video_url',
         'pos_x',
@@ -26,6 +27,7 @@ class CourseNode extends Model
     ];
 
     protected $casts = [
+        'position' => 'integer',
         'content' => 'array',
         'is_start' => 'boolean',
         'is_end' => 'boolean',

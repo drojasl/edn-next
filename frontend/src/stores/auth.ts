@@ -7,10 +7,12 @@ export interface User {
     id: number;
     name: string;
     last_name: string;
-    amway_code: string;
-    codigo_amway?: string; // Support for legacy property name used in UI
+    codigo_amway: string;
     is_account_holder: boolean;
     email?: string;
+    slug?: string;
+    is_active?: boolean;
+    profile_picture?: string | null;
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -29,7 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
             token.value = result.data.token;
             user.value = result.data.user;
             localStorage.setItem('token', token.value);
-            router.push('/');
+            router.push('/admin');
         } else {
             console.error('Login failed', result.error);
             const error: any = new Error(result.error?.message || 'Login failed');
@@ -49,7 +51,7 @@ export const useAuthStore = defineStore('auth', () => {
             token.value = result.data.token;
             user.value = result.data.user;
             localStorage.setItem('token', token.value);
-            router.push('/');
+            router.push('/admin');
         } else {
             console.error('Registration failed', result.error);
             throw new Error(result.error?.message || 'Registration failed');

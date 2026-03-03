@@ -1,13 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 
 const router = createRouter({
     history: createWebHistory(),
     routes: [
+        // Public Routes
         {
             path: '/',
-            name: 'home',
-            component: () => import('../views/Home.vue'),
-            meta: { requiresAuth: true }
+            redirect: '/admin'
         },
         {
             path: '/cursos',
@@ -25,29 +25,89 @@ const router = createRouter({
                 }
             ],
         },
+
+        // Auth Routes (Guests only)
         {
             path: '/admin/login',
             name: 'login',
             component: () => import('../views/admin/LoginForm.vue'),
+            meta: { guestOnly: true }
         },
         {
-            path: '/admin/cursos',
-            name: 'admin-courses',
-            component: () => import('../views/admin/CoursesAdmin.vue'),
-            // meta: { requiresAuth: true } // Enable this when auth is fully integrated
+            path: '/admin/register',
+            name: 'register',
+            component: () => import('../views/admin/RegisterView.vue'),
+            meta: { guestOnly: true }
         },
+
+        // Admin Routes (Authenticated)
         {
-            path: '/admin/cursos/:id/edit',
-            name: 'admin-course-edit',
-            component: () => import('../views/admin/course/CourseEditor.vue'),
+            path: '/admin',
+            component: () => import('../layouts/AdminLayout.vue'),
+            meta: { requiresAuth: true },
+            children: [
+                {
+                    path: '',
+                    name: 'admin-dashboard',
+                    component: () => import('../views/admin/DashboardView.vue'),
+                },
+                {
+                    path: 'prospectos',
+                    name: 'admin-prospects',
+                    component: () => import('../views/admin/ProspectsView.vue'),
+                },
+                {
+                    path: 'cursos',
+                    name: 'admin-courses',
+                    component: () => import('../views/admin/CoursesAdmin.vue'),
+                },
+                {
+                    path: 'cursos/:id/edit',
+                    name: 'admin-course-edit',
+                    component: () => import('../views/admin/course/CourseEditor.vue'),
+                },
+                {
+                    path: 'codigos',
+                    name: 'admin-codes',
+                    component: () => import('../views/admin/CodesView.vue'),
+                },
+                {
+                    path: 'perfil',
+                    name: 'admin-profile',
+                    component: () => import('../views/admin/ProfileView.vue'),
+                },
+                {
+                    path: 'users',
+                    name: 'admin-users',
+                    component: () => import('../views/admin/user/UserListView.vue'),
+                },
+                {
+                    path: 'users/create',
+                    name: 'admin-user-create',
+                    component: () => import('../views/admin/user/UserCreateView.vue'),
+                },
+                {
+                    path: 'users/:id/edit',
+                    name: 'admin-user-edit',
+                    component: () => import('../views/admin/user/UserEditView.vue'),
+                }
+            ]
         }
     ]
 });
 
-router.beforeEach(async (_to, _from, next) => {
-    // const auth = useAuthStore(); // Can't use store outside of app install yet in some setups, but here it's fine if pinia is installed.
-    // However, best practice is to check token in localStorage or similar if store isn't ready.
-    // For simplicity, we'll assume basic check or skip for now until Views are created.
+router.beforeEach(async (to, _from, next) => {
+    const authStore = useAuthStore();
+    const isAuthenticated = !!authStore.token;
+
+    if (to.meta.requiresAuth && !isAuthenticated) {
+        return next('/admin/login');
+    }
+
+    if (to.meta.guestOnly && isAuthenticated) {
+        return next('/admin');
+    }
+
     next();
 });
 
