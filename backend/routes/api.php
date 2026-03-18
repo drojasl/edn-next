@@ -49,5 +49,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Entrepreneurs
         Route::apiResource('entrepreneurs', \App\Http\Controllers\Api\Admin\EntrepreneurController::class);
         Route::post('entrepreneurs/validate-slug', [\App\Http\Controllers\Api\Admin\EntrepreneurController::class, 'validateSlug']);
+
+        // Access Codes
+        Route::post('access-codes/validate-code', [\App\Http\Controllers\Api\Admin\AccessCodeController::class, 'validateCode']);
+        Route::apiResource('access-codes', \App\Http\Controllers\Api\Admin\AccessCodeController::class)->except(['show', 'update']);
     });
 });
