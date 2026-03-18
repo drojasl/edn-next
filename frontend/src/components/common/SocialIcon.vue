@@ -16,8 +16,10 @@ const platformClass = computed(() => {
     case 'telegram': return 'bg-sky-500'
     case 'facebook': return 'bg-blue-600'
     case 'instagram': return 'bg-gradient-to-tr from-orange-400 to-pink-600'
-    case 'tiktok': return 'bg-slate-900'
     case 'youtube': return 'bg-red-600'
+    case 'cell_phone': return 'bg-slate-700'
+    case 'email':
+    case 'email_contact': return 'bg-slate-500'
     default: return 'bg-slate-400'
   }
 })
@@ -56,6 +58,16 @@ const platformClass = computed(() => {
     <svg v-else-if="platform === 'youtube'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2/3 h-2/3">
       <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 2-2h15a2 2 0 0 1 2 2 24.12 24.12 0 0 1 0 10 2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2Z"/>
       <path d="m10 15 5-3-5-3z"/>
+    </svg>
+
+    <!-- Cell Phone -->
+    <svg v-else-if="platform === 'cell_phone'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2/3 h-2/3">
+      <path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+    </svg>
+
+    <!-- Email -->
+    <svg v-else-if="platform === 'email' || platform === 'email_contact'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2/3 h-2/3">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline>
     </svg>
 
     <!-- Generic Fallback (Link) -->

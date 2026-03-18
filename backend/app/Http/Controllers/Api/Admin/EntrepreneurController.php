@@ -22,7 +22,7 @@ class EntrepreneurController extends Controller
      */
     public function index()
     {
-        return response()->json(Entrepreneur::all());
+        return response()->json(Entrepreneur::with('socialLinks')->get());
     }
 
     /**
@@ -38,6 +38,13 @@ class EntrepreneurController extends Controller
             'codigo_amway' => 'required|string|max:20',
             'is_account_holder' => 'required|boolean',
             'slug' => 'required|string|max:255|unique:users',
+            'social_links' => 'nullable|array',
+            'social_links.*.platform' => ['required', 'string', \Illuminate\Validation\Rule::in(\App\Enums\SocialPlatform::values())],
+            'social_links.*.value' => ['required', 'string', function ($attribute, $value, $fail) {
+                if (preg_match('/(http|https|www\.|\.com|\.net|\.org)/i', $value)) {
+                    $fail('El campo no debe contener URLs completas.');
+                }
+            }],
         ]);
 
         $entrepreneur = $this->entrepreneurService->create($validated);
@@ -50,7 +57,7 @@ class EntrepreneurController extends Controller
      */
     public function show(Entrepreneur $entrepreneur)
     {
-        return response()->json($entrepreneur);
+        return response()->json($entrepreneur->load('socialLinks'));
     }
 
     /**
@@ -68,6 +75,13 @@ class EntrepreneurController extends Controller
             'slug' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($entrepreneur->id)],
             'is_active' => 'required|boolean',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'social_links' => 'nullable|array',
+            'social_links.*.platform' => ['required', 'string', \Illuminate\Validation\Rule::in(\App\Enums\SocialPlatform::values())],
+            'social_links.*.value' => ['required', 'string', function ($attribute, $value, $fail) {
+                if (preg_match('/(http|https|www\.|\.com|\.net|\.org)/i', $value)) {
+                    $fail('El campo no debe contener URLs completas.');
+                }
+            }],
         ]);
 
         $entrepreneur = $this->entrepreneurService->update(

@@ -51,6 +51,8 @@ class AuthController extends Controller
         if (!$user->is_active) {
             return response()->json(['message' => 'Account is inactive'], 403);
         }
+        
+        $user->load('socialLinks');
 
         return response()->json([
             'message' => 'Login successful',

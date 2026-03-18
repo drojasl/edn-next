@@ -13,10 +13,21 @@ class EntrepreneurService
      */
     public function create(array $data): Entrepreneur
     {
+        $socialLinks = $data['social_links'] ?? [];
+        unset($data['social_links']);
+
         $data['password'] = Hash::make($data['password']);
         $data['is_active'] = true;
 
-        return Entrepreneur::create($data);
+        $entrepreneur = Entrepreneur::create($data);
+
+        if (!empty($socialLinks)) {
+            foreach ($socialLinks as $link) {
+                $entrepreneur->socialLinks()->create($link);
+            }
+        }
+
+        return $entrepreneur;
     }
 
     /**
@@ -40,7 +51,17 @@ class EntrepreneurService
             $data['profile_picture'] = '/storage/' . $path;
         }
 
+        $socialLinks = $data['social_links'] ?? null;
+        unset($data['social_links']);
+
         $entrepreneur->update($data);
+
+        if ($socialLinks !== null) {
+            $entrepreneur->socialLinks()->delete();
+            foreach ($socialLinks as $link) {
+                $entrepreneur->socialLinks()->create($link);
+            }
+        }
 
         return $entrepreneur;
     }

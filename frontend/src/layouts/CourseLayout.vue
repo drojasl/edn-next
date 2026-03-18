@@ -293,6 +293,7 @@ const getSocialUrl = (platform: string, value: string) => {
     case 'tiktok': return `https://tiktok.com/@${value}`
     case 'youtube': return `https://youtube.com/@${value}`
     case 'email_contact': return `mailto:${value}`
+    case 'cell_phone': return `tel:${value.replace(/\s+/g, '')}`
     default: return value.startsWith('http') ? value : `https://${value}`
   }
 }
@@ -327,7 +328,10 @@ const getFullUrl = (path: string | null) => {
           </svg>
         </button>
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">D</div>
+          <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold overflow-hidden">
+            <img v-if="entrepreneurData?.profile_picture" :src="getFullUrl(entrepreneurData.profile_picture)" class="w-full h-full object-cover" alt="Avatar"/>
+            <span v-else>{{ entrepreneurData?.name?.charAt(0) || courseData?.title?.charAt(0) || 'C' }}</span>
+          </div>
           <span class="font-bold text-lg hidden md:block">{{ courseData?.title || t('course.loading') }}</span>
         </div>
       </div>
@@ -510,16 +514,26 @@ const getFullUrl = (path: string | null) => {
           </div>
           <div>
             <div class="font-bold text-slate-900 leading-tight">{{ entrepreneurData?.name }} {{ entrepreneurData?.last_name }}</div>
-            <div class="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5" v-if="entrepreneurData?.social">
+            <div class="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5" v-if="entrepreneurData?.social || entrepreneurData?.email">
+              <a 
+                v-if="entrepreneurData?.email"
+                :href="'mailto:' + entrepreneurData.email"
+                class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors group"
+                :title="entrepreneurData.email"
+              >
+                <SocialIcon platform="email" size="w-4 h-4" class="group-hover:scale-110" />
+                <span>{{ entrepreneurData.email }}</span>
+              </a>
               <a 
                 v-for="(value, platform) in (entrepreneurData.social as Record<string, string>)"
                 :key="platform"
                 :href="getSocialUrl(platform, value)"
                 target="_blank"
                 class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors group"
+                :title="getSocialLabel(platform, value)"
               >
                 <SocialIcon :platform="platform" size="w-4 h-4" class="group-hover:scale-110" />
-                {{ getSocialLabel(platform, value) }}
+                <span v-if="['whatsapp', 'cell_phone'].includes(platform)">{{ getSocialLabel(platform, value) }}</span>
               </a>
             </div>
           </div>

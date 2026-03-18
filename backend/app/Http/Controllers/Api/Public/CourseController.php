@@ -40,6 +40,8 @@ class CourseController extends Controller
                 'name' => $user->name,
                 'last_name' => $user->last_name,
                 'slug' => $user->slug,
+                'email' => $user->email,
+                'profile_picture' => $user->profile_picture,
                 'style' => $user->styleSettings,
                 'social' => $user->socialLinks->pluck('value', 'platform'),
             ]

@@ -48,7 +48,7 @@ const handleUpdateProfile = async (formData: any) => {
     loading.value = true
     try {
         // Only take the fields that the form manages
-        const allowedFields = ['name', 'last_name', 'email', 'password', 'codigo_amway', 'is_account_holder', 'slug', 'is_active'];
+        const allowedFields = ['name', 'last_name', 'email', 'password', 'codigo_amway', 'is_account_holder', 'slug', 'is_active', 'social_links'];
         const cleanData: any = {};
         allowedFields.forEach(field => {
             if (formData[field] !== undefined) {
@@ -64,9 +64,19 @@ const handleUpdateProfile = async (formData: any) => {
             method = 'POST';
             payload = new FormData();
             Object.keys(cleanData).forEach(key => {
-                if (cleanData[key] !== null) {
+                if (cleanData[key] !== null && cleanData[key] !== undefined) {
                     if (typeof cleanData[key] === 'boolean') {
                        payload.append(key, cleanData[key] ? '1' : '0'); 
+                    } else if (Array.isArray(cleanData[key])) {
+                        cleanData[key].forEach((item: any, index: number) => {
+                            if (typeof item === 'object') {
+                                Object.keys(item).forEach(subKey => {
+                                    payload.append(`${key}[${index}][${subKey}]`, item[subKey]);
+                                });
+                            } else {
+                                payload.append(`${key}[]`, item);
+                            }
+                        });
                     } else {
                        payload.append(key, cleanData[key]);
                     }

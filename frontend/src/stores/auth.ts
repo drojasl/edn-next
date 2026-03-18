@@ -13,6 +13,7 @@ export interface User {
     slug?: string;
     is_active?: boolean;
     profile_picture?: string | null;
+    social_links?: any[];
 }
 
 export const useAuthStore = defineStore('auth', () => {
