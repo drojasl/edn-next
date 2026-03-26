@@ -115,6 +115,7 @@
             "delete": "Eliminar Nodo",
             "delete_confirm": "¿Estás seguro de que quieres eliminar este nodo?",
             "delete_success": "Nodo eliminado correctamente.",
+            "save_success": "Nodo guardado correctamente.",
             "delete_error_connected": "Para eliminar este nodo, primero debes desconectarlo de otros nodos (entrantes y salientes).",
             "default_connection_label": "Continuar",
             "modal": {
@@ -127,6 +128,8 @@
                 "field_description": "Descripción de la lección",
                 "field_description_placeholder": "Agrega una descripción, enlaces o documentos adicionales...",
                 "field_video_url": "URL del Video",
+                "field_video_url_optional": "URL del Video (Opcional)",
+                "field_description_optional": "Descripción (Opcional)",
                 "tabs": {
                     "video": "Lección Video",
                     "form": "Registro / Form",
@@ -136,6 +139,7 @@
                 "menu_placeholder": "Este nodo mostrará opciones para que el usuario elija su camino.",
                 "save": "Guardar y Agregar al Mapa",
                 "form_fields_title": "Campos del Formulario",
+                "menu_buttons_title": "Botones del Menú",
                 "selected": "Seleccionados",
                 "success": "Curso creado exitosamente."
             }
@@ -151,6 +155,7 @@
             "delete": "Eliminar",
             "delete_confirm": "¿Estás seguro de que quieres eliminar este curso?",
             "delete_success": "Curso eliminado correctamente.",
+            "save_success": "Curso guardado correctamente.",
             "delete_error_connected": "Para eliminar este curso, primero debes desconectarlo de otros cursos (entradas y salidas).",
             "delete_connection_confirm": "¿Estás seguro de que quieres eliminar esta conexión?"
         },

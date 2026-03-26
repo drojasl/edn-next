@@ -491,12 +491,12 @@ const getFullUrl = (path: string | null) => {
       ></div>
 
       <!-- Main Content Area -->
-      <main class="flex-1 flex flex-col p-4 md:p-8 max-w-5xl mx-auto w-full">
+      <main class="flex-1 flex flex-col justify-center p-4 md:p-8 max-w-5xl mx-auto w-full">
         <div v-if="isLoading" class="flex-1 flex flex-col items-center justify-center">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
             <p class="text-slate-400 font-medium">{{ t('course.loading') }}</p>
         </div>
-        <div v-else class="flex-1 bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border border-slate-200/50">
+        <div v-else class="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border border-slate-200/50">
           <router-view :node="activeNode" :course="courseData"></router-view>
         </div>
       </main>

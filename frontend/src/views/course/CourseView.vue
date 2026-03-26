@@ -223,9 +223,9 @@ const getFieldIcon = (fieldName: string) => {
     {{ $t('course.noLesson') }}
   </div>
   
-  <div v-else class="flex flex-col h-full bg-white animate-fade-in">
-    <!-- Header/Title section -->
-    <div class="bg-slate-800 text-white px-8 py-4 flex items-center justify-between">
+  <div v-else :class="['flex flex-col bg-white animate-fade-in', (node.type === 'menu' && !node.video_url) ? '' : 'h-full']">
+    <!-- Header/Title section (hidden for form nodes) -->
+    <div v-if="node.type !== 'form'" class="bg-slate-800 text-white px-8 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <span class="text-xs font-bold bg-white/10 px-2 py-1 rounded text-white/60">
             {{ node.type.toUpperCase() }}
@@ -234,8 +234,8 @@ const getFieldIcon = (fieldName: string) => {
       </div>
     </div>
 
-    <!-- Video Player (if type is video) -->
-    <div v-if="node.type === 'video'" class="flex flex-col flex-1 overflow-y-auto">
+    <!-- Video Player (if type is video or menu with video) -->
+    <div v-if="node.type === 'video' || (node.type === 'menu' && node.video_url)" class="flex flex-col flex-1 overflow-y-auto">
       <div class="aspect-video bg-slate-900 shadow-inner">
         <iframe 
           v-if="getYoutubeId(node.video_url)"
@@ -251,13 +251,7 @@ const getFieldIcon = (fieldName: string) => {
       </div>
 
       <!-- Description Section -->
-      <div v-if="node.content?.description" class="p-8 md:p-12 prose max-w-none flex-1">
-        <h3 class="text-slate-800 font-bold mb-4 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-indigo-500">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
-          </svg>
-          {{ $t('course.node.description') || 'Descripción de la lección' }}
-        </h3>
+      <div v-if="node.content?.description" class="px-12 py-3 prose max-w-none flex-1">
         <div class="text-slate-600 leading-relaxed whitespace-pre-wrap">
           {{ node.content.description }}
         </div>
@@ -265,8 +259,8 @@ const getFieldIcon = (fieldName: string) => {
     </div>
 
     <!-- Form Content (if type is form) -->
-    <div v-else-if="node.type === 'form'" class="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50 shadow-inner">
-      <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+    <div v-else-if="node.type === 'form'" class="flex-1 flex items-center justify-center overflow-y-auto">
+      <div class="max-w-md mx-auto w-full">
         <div class="px-8 py-10">
           <h2 class="text-3xl font-bold text-slate-800 mb-8 text-center">
             {{ $t('course.form.title') || 'Introduce tus datos' }}
@@ -334,6 +328,13 @@ const getFieldIcon = (fieldName: string) => {
         <div v-html="node.content?.body"></div>
     </div>
 
+    <!-- Menu without video: show description if available -->
+    <div v-else-if="node.type === 'menu'">
+      <div v-if="node.content?.description" class="p-8 prose max-w-none">
+        <div class="text-slate-600 leading-relaxed whitespace-pre-wrap">{{ node.content.description }}</div>
+      </div>
+    </div>
+
     <!-- Generic Content (meta, task, etc) -->
     <div v-else class="flex-1 p-8 flex flex-col items-center justify-center text-center">
         <p class="text-slate-500">{{ node.title }}</p>
@@ -341,21 +342,26 @@ const getFieldIcon = (fieldName: string) => {
 
     <!-- Footer Action -->
     <div v-if="node.type !== 'form'" class="p-8 border-t border-slate-100 flex flex-col items-center gap-4">
-      <div v-if="!node.is_end && node.options?.length > 0" class="w-full max-w-sm flex flex-col gap-3">
+      <div v-if="!node.is_end && node.options?.length > 0" :class="[
+        'w-full gap-4',
+        node.type === 'menu' 
+          ? 'max-w-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3' 
+          : 'max-w-sm flex flex-col'
+      ]">
         <BaseButton 
           v-for="option in node.options" 
           :key="option.id"
-          :text="option.label || $t('course.continue')"
+          :text="(option.label?.startsWith('menu-btn-') ? node.content?.buttons?.[parseInt(option.label.replace('menu-btn-', ''))] : option.label) || $t('course.continue')"
           :action="() => handleNavigate(option.next_node_id)"
-          class="shadow-lg"
+          class="shadow-lg h-full"
           :extra-props="{ loading: loading }"
         />
       </div>
-      <div v-else class="w-full max-w-sm">
+      <div v-else-if="!node.is_end || course?.next_course_id" class="w-full max-w-sm">
         <BaseButton 
-          :text="node.is_end ? (course?.next_course_id ? (course.next_course_label || $t('course.next_course_default')) : $t('course.finish')) : $t('course.continue')"
+          :text="node.is_end ? (course.next_course_label || $t('course.next_course_default')) : $t('course.continue')"
           :action="handleContinue"
-          :variant="node.is_end ? 'primary' : 'primary'"
+          :variant="'primary'"
           :extra-props="{
             loading: loading,
             loadingText: $t('course.preparing'),

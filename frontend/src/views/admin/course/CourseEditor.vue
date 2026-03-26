@@ -61,15 +61,22 @@ const fetchNodes = async () => {
             if (node.options && node.options.length) {
                 node.options.forEach((opt: any) => {
                     if (opt.next_node_id) {
-                        edges.push({
+                        const edge: any = {
                             id: `e${opt.id || `${node.id}-${opt.next_node_id}`}`,
                             source: node.id.toString(),
                             target: opt.next_node_id.toString(),
-                            label: opt.label, // Always show the label
-                            // Unified output: no sourceHandle needed anymore
+                            label: opt.label?.startsWith('menu-btn-')
+                                ? node.content?.buttons?.[parseInt(opt.label.replace('menu-btn-', ''))] || opt.label
+                                : opt.label, // Always show the label
                             type: 'custom',
                             animated: true
-                        })
+                        }
+                        
+                        if (node.type === 'menu') {
+                            edge.sourceHandle = opt.label?.startsWith('menu-btn-') ? opt.label : opt.label // Keep opt.label for fallback legacy string connections
+                        }
+                        
+                        edges.push(edge)
                     }
                 })
             }
@@ -104,7 +111,7 @@ const _saveConnections = createStateDebouncer<{ edges: any[] }>(async ({ edges }
     const connections = edges.map(edge => ({
         source_node_id: parseInt(edge.source),
         target_node_id: parseInt(edge.target),
-        label: edge.label || t('course.editor.default_connection_label')
+        label: edge.sourceHandle || edge.label || t('course.editor.default_connection_label')
     }))
 
     const response = await apiRequest({
@@ -191,7 +198,7 @@ const saveTitle = async () => {
 
     if (response.success) {
         courseTitle.value = tempCourseTitle.value.trim()
-        showToast(t('course.management.delete_success'), 'success') // Using generic success toast
+        showToast(t('course.management.save_success'), 'success') // Using generic success toast
     } else {
         showToast(response.error?.message || t('common.error'), 'error')
     }
@@ -227,7 +234,7 @@ const handleNodeSave = async (formData: NodeData) => {
     if (response.success) {
         await fetchNodes()
         showToast(
-            formData.id ? t('course.editor.delete_success') : t('course.editor.delete_success'), // Reuse for now or add new keys
+            t('course.editor.save_success'),
             'success'
         )
     } else {

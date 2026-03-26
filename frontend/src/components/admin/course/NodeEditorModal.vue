@@ -1,8 +1,16 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+
+const getYoutubeId = (url: string | undefined) => {
+    if (!url) return null
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    const match = url.match(regExp)
+    const videoId = match?.[2]
+    return (videoId && videoId.length === 11) ? videoId : null
+}
 
 export interface NodeData {
     id?: number
@@ -11,6 +19,8 @@ export interface NodeData {
     video_url?: string
     content?: {
         description?: string
+        fields?: any[]
+        buttons?: string[]
         [key: string]: any
     }
 }
@@ -25,9 +35,12 @@ const form = reactive<NodeData>({
     video_url: '',
     content: {
         description: '',
-        fields: []
+        fields: [],
+        buttons: []
     }
 })
+
+const videoPreviewId = computed(() => getYoutubeId(form.video_url))
 
 const AVAILABLE_FIELDS = [
     { name: 'name', labelKey: 'course.form.fields.name', type: 'text', icon: 'user', required: true },
@@ -68,6 +81,18 @@ const isFieldSelected = (fieldName: string) => {
     return form.content?.fields?.some((f: any) => f.name === fieldName)
 }
 
+const addButton = () => {
+    if (!form.content) form.content = {}
+    if (!form.content.buttons) form.content.buttons = []
+    form.content.buttons.push(`Botón ${form.content.buttons.length + 1}`)
+}
+
+const removeButton = (index: number) => {
+    if (form.content?.buttons) {
+        form.content.buttons.splice(index, 1)
+    }
+}
+
 const emit = defineEmits(['save'])
 
 const open = (data?: Partial<NodeData>) => {
@@ -76,11 +101,13 @@ const open = (data?: Partial<NodeData>) => {
         isEditing.value = true
         Object.assign(form, {
             ...data,
-            content: data.content || { description: '', fields: [] }
+            content: data.content || { description: '', fields: [], buttons: [] }
         })
+        if (form.content && !form.content.buttons) form.content.buttons = []
     } else {
         isEditing.value = false
         Object.assign(form, {
+            id: undefined,
             title: '',
             type: 'video',
             video_url: '',
@@ -91,7 +118,8 @@ const open = (data?: Partial<NodeData>) => {
                     label: t(f.labelKey),
                     type: f.type,
                     required: true
-                }))
+                })),
+                buttons: []
             }
         })
     }
@@ -105,6 +133,11 @@ const close = () => {
 const handleSave = () => {
     submitted.value = true
     if (!form.title.trim()) return
+    
+    if (form.type === 'menu' && form.content?.buttons) {
+        form.content.buttons = form.content.buttons.filter(b => b && b.trim() !== '')
+    }
+    
     emit('save', { ...form })
     close()
 }
@@ -179,16 +212,29 @@ defineExpose({ open, close })
                                     <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200">
                                         <!-- Video Content -->
                                         <div v-if="form.type === 'video'" class="space-y-4">
-                                            <div>
-                                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                                    {{ t('course.editor.modal.field_video_url') }}
-                                                </label>
-                                                <input 
-                                                    v-model="form.video_url"
-                                                    type="text" 
-                                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                                    placeholder="https://youtube.com/..."
-                                                />
+                                            <div class="flex items-end gap-3">
+                                                <div class="flex-1">
+                                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                        {{ t('course.editor.modal.field_video_url') }}
+                                                    </label>
+                                                    <input 
+                                                        v-model="form.video_url"
+                                                        type="text" 
+                                                        class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                                        placeholder="https://youtube.com/..."
+                                                    />
+                                                </div>
+                                                <div v-if="videoPreviewId" class="w-32 shrink-0 rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+                                                    <div class="aspect-video bg-slate-900">
+                                                        <iframe 
+                                                            class="w-full h-full"
+                                                            :src="`https://www.youtube.com/embed/${videoPreviewId}?rel=0&modestbranding=1`"
+                                                            frameborder="0"
+                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                            allowfullscreen
+                                                        ></iframe>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div>
                                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
@@ -245,15 +291,76 @@ defineExpose({ open, close })
                                         </div>
 
                                         <!-- Menu/Links Content -->
-                                        <div v-if="form.type === 'menu'" class="py-12 flex flex-col items-center justify-center text-center">
-                                            <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
-                                                </svg>
+                                        <div v-if="form.type === 'menu'" class="space-y-4">
+                                            <div class="flex items-end gap-3">
+                                                <div class="flex-1">
+                                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                        {{ t('course.editor.modal.field_video_url_optional') || 'URL del Video (Opcional)' }}
+                                                    </label>
+                                                    <input 
+                                                        v-model="form.video_url"
+                                                        type="text" 
+                                                        class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                                        placeholder="https://youtube.com/..."
+                                                    />
+                                                </div>
+                                                <div v-if="videoPreviewId" class="w-32 shrink-0 rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+                                                    <div class="aspect-video bg-slate-900">
+                                                        <iframe 
+                                                            class="w-full h-full"
+                                                            :src="`https://www.youtube.com/embed/${videoPreviewId}?rel=0&modestbranding=1`"
+                                                            frameborder="0"
+                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                            allowfullscreen
+                                                        ></iframe>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <p class="text-sm font-medium text-slate-600 max-w-xs">
-                                                {{ t('course.editor.modal.menu_placeholder') }}
-                                            </p>
+
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                    {{ t('course.editor.modal.field_description_optional') || 'Descripción (Opcional)' }}
+                                                </label>
+                                                <textarea 
+                                                    v-model="form.content!.description"
+                                                    rows="3"
+                                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
+                                                    :placeholder="t('course.editor.modal.field_description_placeholder')"
+                                                ></textarea>
+                                            </div>
+
+                                            <header class="flex items-center justify-between mb-2">
+                                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                    {{ t('course.editor.modal.menu_buttons_title') || 'Botones del Menú' }}
+                                                </label>
+                                                <button @click="addButton()" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition-colors flex items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                    </svg>
+                                                    Agregar Botón
+                                                </button>
+                                            </header>
+                                            
+                                            <div class="space-y-3">
+                                                <div v-for="(_btn, idx) in form.content?.buttons || []" :key="idx" class="flex gap-2 items-center">
+                                                    <input 
+                                                        v-model="form.content!.buttons![idx]" 
+                                                        type="text" 
+                                                        class="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                                        :class="!(form.content?.buttons?.[idx] || '').trim() ? 'border-red-400 focus:ring-red-500' : ''"
+                                                        :placeholder="'Texto del botón ' + (idx + 1)"
+                                                    />
+                                                    <button @click="removeButton(idx)" class="p-2.5 text-red-500 bg-red-50 rounded-xl hover:bg-red-500 hover:text-white transition-all group" title="Eliminar Botón">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 transition-transform group-hover:scale-110">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                
+                                                <div v-if="!form.content?.buttons?.length" class="text-center py-6 text-slate-400 text-sm italic border-2 border-dashed border-slate-200 rounded-xl bg-white/50">
+                                                    No hay botones. Haz clic en "+ Agregar Botón" para comenzar.
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

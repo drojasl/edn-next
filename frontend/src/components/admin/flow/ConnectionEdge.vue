@@ -56,6 +56,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
                 position: 'absolute',
                 transform: `translate(-50%, -50%) translate(${path[1]}px, ${path[2]}px)`,
                 pointerEvents: 'all',
+                zIndex: 1000,
             }"
             class="nodrag nopan flex flex-col items-center gap-2"
         >
@@ -70,7 +71,10 @@ const inputRef = ref<HTMLInputElement | null>(null)
                     @input="handleInput"
                     @blur="handleBlurOrEnter"
                     @keydown.enter="handleBlurOrEnter"
+                    :readonly="!!props.sourceHandleId"
                     class="bg-transparent border-none outline-none text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center w-20 focus:text-indigo-600"
+                    :class="props.sourceHandleId ? 'cursor-default' : ''"
+                    :title="props.sourceHandleId ? 'Este texto proviene del botón del menú' : ''"
                     placeholder="LABEL"
                 />
             </div>
@@ -103,5 +107,12 @@ const inputRef = ref<HTMLInputElement | null>(null)
     to {
         stroke-dashoffset: 0;
     }
+}
+</style>
+
+<style>
+/* Ensure edge labels and their delete buttons always appear above nodes */
+.vue-flow__edge-labels {
+    z-index: 10 !important;
 }
 </style>

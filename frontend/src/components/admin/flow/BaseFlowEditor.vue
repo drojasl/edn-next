@@ -94,8 +94,8 @@ watch(() => [props.initialNodes, props.initialEdges] as const, async (newVal) =>
 
         // Edge comparison: simplified to avoid recursive triggers 
         // from Vue Flow's internal reactive additions
-        const simplifiedOldEdges = edges.value.map(e => `${e.source}-${e.target}-${e.label}`)
-        const simplifiedNewEdges = newEdges.map(e => `${e.source}-${e.target}-${e.label}`)
+        const simplifiedOldEdges = edges.value.map(e => `${e.source}-${e.sourceHandle}-${e.target}-${e.label}`)
+        const simplifiedNewEdges = newEdges.map(e => `${e.source}-${e.sourceHandle}-${e.target}-${e.label}`)
         
         if (JSON.stringify(simplifiedOldEdges) !== JSON.stringify(simplifiedNewEdges)) {
             edges.value = JSON.parse(JSON.stringify(newEdges))
@@ -135,9 +135,19 @@ onConnect(async (params: Connection) => {
         return
     }
 
+    // Resolve human-readable label for new menu connections
+    let displayLabel = params.sourceHandle || t('course.editor.default_connection_label')
+    if (params.sourceHandle?.startsWith('menu-btn-')) {
+        const sourceNode = nodes.value.find(n => n.id === params.source)
+        if (sourceNode?.data?.content?.buttons) {
+            const index = parseInt(params.sourceHandle.replace('menu-btn-', ''))
+            displayLabel = sourceNode.data.content.buttons[index] || displayLabel
+        }
+    }
+
     const customEdge = {
         ...params,
-        label: t('course.editor.default_connection_label'),
+        label: displayLabel,
         type: 'custom',
         animated: true
     } as Edge
@@ -190,8 +200,21 @@ onEdgesChange(async (changes) => {
 const isValidConnection = (connection: Connection) => {
     if (isInitializing.value) return true
     if (props.allowMultipleOutputs) return true
+    
+    // For Menu nodes with custom button handles, allow multiple connections
+    // but only ONE edge per button handle
+    if (connection.sourceHandle) {
+        const handleHasAnotherEdge = edges.value.some(edge => 
+            edge.source === connection.source && 
+            edge.sourceHandle === connection.sourceHandle
+        )
+        return !handleHasAnotherEdge
+    }
+    
+    // Basic single output logic (for normal nodes)
     const sourceHasAnotherEdge = edges.value.some(edge => 
-        edge.source === connection.source && edge.target !== connection.target
+        edge.source === connection.source && 
+        !edge.sourceHandle // Normal nodes have no specific sourceHandle
     )
     return !sourceHasAnotherEdge
 }

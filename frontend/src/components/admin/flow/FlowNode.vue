@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Handle, Position } from '@vue-flow/core'
-import { computed } from 'vue'
+import { Handle, Position, useVueFlow } from '@vue-flow/core'
+import { computed, watch, onMounted } from 'vue'
 
 const props = defineProps<{
   id: string
@@ -11,6 +11,11 @@ const props = defineProps<{
     isStart?: boolean
     isEnd?: boolean
     options?: { id: string; label: string }[] // For branching nodes
+    content?: {
+      description?: string
+      buttons?: string[]
+      [key: string]: any
+    }
     // For Course nodes, we might just use a default output
     isCourse?: boolean 
   }
@@ -22,6 +27,24 @@ const emit = defineEmits(['action'])
 const isCourse = computed(() => props.data?.isCourse)
 const isStart = computed(() => props.data?.isStart)
 const isEnd = computed(() => props.data?.isEnd)
+
+const { updateNodeInternals } = useVueFlow()
+
+// Ensure Vue Flow recalculates handles if the menu buttons change dynamically
+watch(() => props.data?.content?.buttons, () => {
+    // Need a slight pause for Vue DOM rendering and Vue Flow Handle mounting/measuring
+    setTimeout(() => {
+        updateNodeInternals([props.id])
+    }, 50)
+}, { deep: true })
+
+onMounted(() => {
+    if (props.data?.type === 'menu') {
+        setTimeout(() => {
+            updateNodeInternals([props.id])
+        }, 50)
+    }
+})
 
 // 22: const isCourse = computed(() => props.data?.isCourse)
 // ...
@@ -89,10 +112,27 @@ const borderColor = computed(() => {
       <p v-if="data.description" class="text-xs text-slate-600 line-clamp-2 mt-1 mb-2 italic">
         {{ data.description }}
       </p>
+
+      <!-- Menu Buttons and Custom Handles -->
+      <div v-if="data.type === 'menu' && data.content?.buttons?.length" class="mt-2 space-y-2 border-t border-slate-100 pt-3 pb-1 -mx-4 px-4">
+        <div v-for="(btn, idx) in data.content.buttons" :key="`${btn}-${idx}`" class="relative group">
+          <div class="text-[10px] font-bold text-slate-600 flex items-center justify-between px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors">
+            <span class="truncate">{{ btn }}</span>
+          </div>
+          <!-- Handle specifically for this button -->
+          <Handle 
+            type="source" 
+            :id="`menu-btn-${idx}`"
+            :position="Position.Right" 
+            class="!w-3 !h-3 !bg-indigo-500 !border-2 !border-white hover:!scale-125 transition-transform !absolute !-right-1 !top-1/2 !-translate-y-1/2" 
+          />
+        </div>
+      </div>
     </div>
 
-    <!-- Default Output Handle (Source) - All nodes can send connections -->
+    <!-- Default Output Handle (Source) - Hide for menu type since it uses custom handles -->
     <Handle 
+      v-if="data.type !== 'menu'"
       type="source" 
       :position="Position.Right" 
       class="!w-4 !h-4 !bg-indigo-500 !border-2 !border-white hover:!scale-125 transition-transform" 
