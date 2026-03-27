@@ -162,13 +162,14 @@
         "form": {
             "title": "Introduce tus datos",
             "submit": "Enviar y continuar",
-            "contact_me": "Contáctame",
+            "access": "Acceder",
             "fields": {
                 "name": "Nombre Completo",
                 "country": "País",
                 "city": "Ciudad",
                 "email": "Correo Electrónico",
                 "phone": "Teléfono / Celular",
+                "amway_code": "Código Amway",
                 "accept_terms": "Acepto recibir información"
             }
         },

@@ -23,11 +23,12 @@ class ProspectProgressController extends Controller
     public function sync(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|email',
-            'name' => 'nullable|string',
-            'phone' => 'nullable|string',
-            'city' => 'nullable|string',
-            'country' => 'nullable|string',
+            'email' => 'required|email|max:100',
+            'name' => 'nullable|string|min:5|max:100',
+            'phone' => 'nullable|string|min:5|max:25',
+            'amway_code' => 'nullable|string|min:8|max:15',
+            'city' => 'nullable|string|min:3|max:50',
+            'country' => 'nullable|string|min:5|max:50',
             'accept_terms' => 'nullable|boolean',
             'code' => 'required|string',
             'progress' => 'nullable|array', // { course_slug: max_position } — can be empty on first visit
@@ -43,6 +44,7 @@ class ProspectProgressController extends Controller
                 array_filter([
                     'name' => $validated['name'] ?? null,
                     'phone' => $validated['phone'] ?? null,
+                    'amway_code' => $validated['amway_code'] ?? null,
                     'city' => $validated['city'] ?? null,
                     'country' => $validated['country'] ?? null,
                     'access_code_id' => $accessCode->id,

@@ -43,12 +43,13 @@ const form = reactive<NodeData>({
 const videoPreviewId = computed(() => getYoutubeId(form.video_url))
 
 const AVAILABLE_FIELDS = [
-    { name: 'name', labelKey: 'course.form.fields.name', type: 'text', icon: 'user', required: true },
-    { name: 'email', labelKey: 'course.form.fields.email', type: 'email', icon: 'envelope', required: true },
-    { name: 'phone', labelKey: 'course.form.fields.phone', type: 'tel', icon: 'phone', required: true },
-    { name: 'city', labelKey: 'course.form.fields.city', type: 'text', icon: 'map-pin', required: true },
-    { name: 'country', labelKey: 'course.form.fields.country', type: 'text', icon: 'globe', required: true },
+    { name: 'name', labelKey: 'course.form.fields.name', type: 'text', icon: 'user', required: true, min: 5, max: 100 },
+    { name: 'email', labelKey: 'course.form.fields.email', type: 'email', icon: 'envelope', required: true, max: 100 },
+    { name: 'phone', labelKey: 'course.form.fields.phone', type: 'tel', icon: 'phone', required: true, min: 7, max: 25 },
+    { name: 'city', labelKey: 'course.form.fields.city', type: 'text', icon: 'map-pin', required: true, min: 3, max: 50 },
+    { name: 'country', labelKey: 'course.form.fields.country', type: 'text', icon: 'globe', required: true, min: 5, max: 50 },
     { name: 'accept_terms', labelKey: 'course.form.fields.accept_terms', type: 'checkbox', icon: 'check', required: true },
+    { name: 'amway_code', labelKey: 'course.form.fields.amway_code', type: 'text', icon: 'identification', required: true, min: 8, max: 15 },
 ]
 
 const toggleField = (field: any) => {
@@ -57,15 +58,15 @@ const toggleField = (field: any) => {
 
     const index = form.content.fields.findIndex((f: any) => f.name === field.name)
     if (index > -1) {
-        // Prevent removal of name and email
-        if (field.name === 'name' || field.name === 'email') return
         form.content.fields.splice(index, 1)
     } else {
         form.content.fields.push({
             name: field.name,
             label: t(field.labelKey),
             type: field.type,
-            required: true
+            required: true,
+            min: field.min,
+            max: field.max
         })
         
         // Keep sorting as per AVAILABLE_FIELDS
@@ -113,12 +114,16 @@ const open = (data?: Partial<NodeData>) => {
             video_url: '',
             content: { 
                 description: '', 
-                fields: AVAILABLE_FIELDS.map(f => ({
-                    name: f.name,
-                    label: t(f.labelKey),
-                    type: f.type,
-                    required: true
-                })),
+                fields: AVAILABLE_FIELDS
+                    .filter(f => f.name !== 'amway_code')
+                    .map(f => ({
+                        name: f.name,
+                        label: t(f.labelKey),
+                        type: f.type,
+                        required: true,
+                        min: f.min,
+                        max: f.max
+                    })),
                 buttons: []
             }
         })
@@ -134,6 +139,8 @@ const handleSave = () => {
     submitted.value = true
     if (!form.title.trim()) return
     
+    if (form.type === 'form' && (!form.content?.fields || form.content.fields.length === 0)) return
+
     if (form.type === 'menu' && form.content?.buttons) {
         form.content.buttons = form.content.buttons.filter(b => b && b.trim() !== '')
     }
@@ -255,10 +262,16 @@ defineExpose({ open, close })
                                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                     {{ t('course.editor.modal.form_fields_title') || 'Campos del Formulario' }}
                                                 </label>
-                                                <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                                <span 
+                                                    class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                                    :class="submitted && (!form.content?.fields || form.content.fields.length === 0) ? 'bg-red-100 text-red-600' : 'bg-indigo-50 text-indigo-500'"
+                                                >
                                                     {{ form.content?.fields?.length || 0 }} {{ t('course.editor.modal.selected') || 'Seleccionados' }}
                                                 </span>
                                             </header>
+                                            <p v-if="submitted && form.type === 'form' && (!form.content?.fields || form.content.fields.length === 0)" class="mb-3 text-xs font-bold text-red-600">
+                                                Selecciona al menos un campo para el formulario.
+                                            </p>
                                             
                                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 <button 
@@ -270,7 +283,7 @@ defineExpose({ open, close })
                                                         isFieldSelected(field.name) 
                                                             ? 'bg-indigo-50 border-indigo-500 text-indigo-700' 
                                                             : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200',
-                                                        (field.name === 'name' || field.name === 'email') ? 'cursor-default opacity-90' : 'cursor-pointer'
+                                                        'cursor-pointer'
                                                     ]"
                                                 >
                                                     <div 
@@ -281,11 +294,12 @@ defineExpose({ open, close })
                                                         <svg v-if="field.icon === 'user'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
                                                         <svg v-else-if="field.icon === 'envelope'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
                                                         <svg v-else-if="field.icon === 'phone'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+                                                        <svg v-else-if="field.icon === 'identification'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" /></svg>
                                                         <svg v-else-if="field.icon === 'globe'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" /></svg>
                                                         <svg v-else-if="field.icon === 'map-pin'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z" /></svg>
                                                         <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                                                     </div>
-                                                    <span class="font-bold text-sm">{{ t(field.labelKey) }}</span>
+                                                    <span class="font-bold text-sm">{{ t(field.labelKey) || field.name }}</span>
                                                 </button>
                                             </div>
                                         </div>

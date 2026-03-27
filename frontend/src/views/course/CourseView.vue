@@ -35,21 +35,55 @@ const isFormValid = computed(() => {
   for (const field of fields) {
     const val = formData[field.name]
     
+    // Helper to get defaults if not present in field config (for existing nodes)
+    const getConstraint = (name: string, type: 'min' | 'max') => {
+      if (type === 'min') {
+        switch (name) {
+          case 'name': return 5
+          case 'phone': return 5
+          case 'city': return 3
+          case 'country': return 5
+          case 'amway_code': return 8
+          default: return 0
+        }
+      } else {
+        switch (name) {
+          case 'name': return 100
+          case 'email': return 100
+          case 'phone': return 25
+          case 'city': return 50
+          case 'country': return 50
+          case 'amway_code': return 15
+          default: return 255
+        }
+      }
+    }
+
+    const min = field.min ?? getConstraint(field.name, 'min')
+    const max = field.max ?? getConstraint(field.name, 'max')
+
     // Checkboxes (accept_terms): always mandatory if present in the form
     if (field.type === 'checkbox') {
       if (!val) return false
       continue
     }
     
-    // Required text/email/tel fields
+    // Required base validation
     if (field.required || field.name === 'name' || field.name === 'email') {
       if (!val || (typeof val === 'string' && val.trim() === '')) return false
     }
     
-    // Email format validation
-    if (field.type === 'email' || field.name === 'email') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!val || !emailRegex.test(String(val))) return false
+    // Only validate content if it's not empty (it's either valid-empty-optional or non-empty-at-this-point)
+    const stringVal = String(val || '').trim()
+    if (stringVal.length > 0) {
+      if (min && stringVal.length < min) return false
+      if (max && stringVal.length > max) return false
+
+      // Email format validation
+      if (field.type === 'email' || field.name === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(stringVal)) return false
+      }
     }
   }
   
@@ -96,7 +130,7 @@ const syncProgressWithBackend = async (data: Record<string, any>) => {
     progress,   // always send as object, even if empty {}
     completed,
   }
-  const knownProspectFields = ['name', 'email', 'phone', 'city', 'country']
+  const knownProspectFields = ['name', 'email', 'phone', 'city', 'country', 'amway_code']
   knownProspectFields.forEach(key => {
     if (data[key] !== undefined && data[key] !== '') {
       prospectPayload[key] = data[key]
@@ -213,6 +247,7 @@ const getFieldIcon = (fieldName: string) => {
     case 'city': return 'map-pin'
     case 'email': return 'envelope'
     case 'phone': return 'phone'
+    case 'amway_code': return 'id-card'
     default: return null
   }
 }
@@ -276,6 +311,7 @@ const getFieldIcon = (fieldName: string) => {
                   <svg v-else-if="getFieldIcon(field.name) === 'map-pin'" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8 opacity-70" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
                   <svg v-else-if="getFieldIcon(field.name) === 'envelope'" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8 opacity-70" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
                   <svg v-else-if="getFieldIcon(field.name) === 'phone'" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8 opacity-70" viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>
+                  <svg v-else-if="getFieldIcon(field.name) === 'id-card'" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8 opacity-70" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-7-2h5v-2h-5v2zm-4-2h2v-2H8v2zm0-4h2V9H8v2zm4 0h5V9h-5v2z"/></svg>
                   <div v-else class="w-8 h-8 bg-slate-100 rounded-full"></div>
                 </div>
                 <div class="flex-1">
@@ -285,6 +321,8 @@ const getFieldIcon = (fieldName: string) => {
                     :placeholder="$t(`course.form.fields.${field.name}`) || field.label"
                     class="w-full px-5 py-4 border-2 border-slate-100 bg-slate-50/50 rounded-xl focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none font-medium placeholder:text-slate-400"
                     :required="field.required"
+                    :minlength="field.min"
+                    :maxlength="field.max"
                   />
                 </div>
               </div>
@@ -314,7 +352,7 @@ const getFieldIcon = (fieldName: string) => {
                 <span v-if="formSubmitting" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
                 <span v-else-if="!isFormValid" class="text-white/70 text-base">Completa los campos requeridos</span>
                 <template v-else>
-                  {{ node.content?.submit_label || $t('course.form.contact_me') || 'Contáctame' }}
+                  {{ node.content?.submit_label || $t('course.form.access') || 'Acceder' }}
                 </template>
               </button>
             </div>

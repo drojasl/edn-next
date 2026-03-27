@@ -102,13 +102,14 @@
         "form": {
             "title": "Enter your details",
             "submit": "Submit and continue",
-            "contact_me": "Contact me",
+            "access": "Access",
             "fields": {
                 "name": "Full Name",
                 "country": "Country",
                 "city": "City",
                 "email": "Email Address",
                 "phone": "Phone / Mobile",
+                "amway_code": "Amway Code",
                 "accept_terms": "I agree to receive information"
             }
         },

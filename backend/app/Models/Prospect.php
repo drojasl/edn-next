@@ -13,6 +13,7 @@ class Prospect extends Model
         'name',
         'email',
         'phone',
+        'amway_code',
         'city',
         'country',
         'access_code_id',
