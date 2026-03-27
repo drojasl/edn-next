@@ -17,6 +17,7 @@ class Prospect extends Model
         'city',
         'country',
         'access_code_id',
+        'is_reviewed',
     ];
 
     public function accessCode()

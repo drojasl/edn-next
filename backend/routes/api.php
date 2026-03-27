@@ -53,5 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Access Codes
         Route::post('access-codes/validate-code', [\App\Http\Controllers\Api\Admin\AccessCodeController::class, 'validateCode']);
         Route::apiResource('access-codes', \App\Http\Controllers\Api\Admin\AccessCodeController::class)->except(['show', 'update']);
+
+        // Prospects
+        Route::get('prospects', [\App\Http\Controllers\Api\Admin\ProspectController::class, 'index']);
+        Route::patch('prospects/{prospect}/toggle-review', [\App\Http\Controllers\Api\Admin\ProspectController::class, 'toggleReview']);
     });
 });
