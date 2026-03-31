@@ -20,6 +20,8 @@ class CourseNode extends Model
         'position',
         'content',
         'video_url',
+        'meeting_link',
+        'show_description',
         'pos_x',
         'pos_y',
         'is_start',
@@ -29,6 +31,7 @@ class CourseNode extends Model
     protected $casts = [
         'position' => 'integer',
         'content' => 'array',
+        'show_description' => 'boolean',
         'is_start' => 'boolean',
         'is_end' => 'boolean',
         'pos_x' => 'integer',

@@ -286,7 +286,7 @@ const getFieldIcon = (fieldName: string) => {
       </div>
 
       <!-- Description Section -->
-      <div v-if="node.content?.description" class="px-12 py-3 prose max-w-none flex-1">
+      <div v-if="node.content?.description && node.show_description !== false" class="px-12 py-3 prose max-w-none flex-1">
         <div class="text-slate-600 leading-relaxed whitespace-pre-wrap">
           {{ node.content.description }}
         </div>
@@ -294,7 +294,10 @@ const getFieldIcon = (fieldName: string) => {
     </div>
 
     <!-- Form Content (if type is form) -->
-    <div v-else-if="node.type === 'form'" class="flex-1 flex items-center justify-center overflow-y-auto">
+    <div v-else-if="node.type === 'form'" class="flex-1 flex flex-col items-center justify-center overflow-y-auto">
+      <div v-if="node.content?.description && node.show_description !== false" class="w-full max-w-md px-8 pt-8 text-center text-slate-600 whitespace-pre-wrap leading-relaxed">
+        {{ node.content.description }}
+      </div>
       <div class="max-w-md mx-auto w-full">
         <div class="px-8 py-10">
           <h2 class="text-3xl font-bold text-slate-800 mb-8 text-center">
@@ -368,7 +371,7 @@ const getFieldIcon = (fieldName: string) => {
 
     <!-- Menu without video: show description if available -->
     <div v-else-if="node.type === 'menu'">
-      <div v-if="node.content?.description" class="p-8 prose max-w-none">
+      <div v-if="node.content?.description && node.show_description !== false" class="p-8 prose max-w-none">
         <div class="text-slate-600 leading-relaxed whitespace-pre-wrap">{{ node.content.description }}</div>
       </div>
     </div>
@@ -395,7 +398,7 @@ const getFieldIcon = (fieldName: string) => {
           :extra-props="{ loading: loading }"
         />
       </div>
-      <div v-else-if="!node.is_end || course?.next_course_id" class="w-full max-w-sm">
+      <div v-else-if="node.type !== 'form' && (!node.is_end || course?.next_course_id)" class="w-full max-w-sm">
         <BaseButton 
           :text="node.is_end ? (course.next_course_label || $t('course.next_course_default')) : $t('course.continue')"
           :action="handleContinue"

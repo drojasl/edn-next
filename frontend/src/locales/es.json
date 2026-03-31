@@ -90,6 +90,7 @@
         "loading": "Cargando...",
         "sidebarTitle": "Contenido del Curso",
         "contact": "Contactar",
+        "schedule_meeting": "Agendar una reunión",
         "continue": "Continuar",
         "finish": "Finalizar Curso",
         "next_course_default": "Siguiente Curso",
@@ -130,6 +131,10 @@
                 "field_video_url": "URL del Video",
                 "field_video_url_optional": "URL del Video (Opcional)",
                 "field_description_optional": "Descripción (Opcional)",
+                "field_description_label": "Descripción / Contenido",
+                "field_show_description": "Mostrar al usuario",
+                "field_meeting_link": "Enlace de Reunión:",
+                "field_meeting_link_placeholder": "https://calendly.com/... (Opcional)",
                 "tabs": {
                     "video": "Lección Video",
                     "form": "Registro / Form",
@@ -140,6 +145,7 @@
                 "save": "Guardar y Agregar al Mapa",
                 "form_fields_title": "Campos del Formulario",
                 "menu_buttons_title": "Botones del Menú",
+                "menu_no_buttons": "No hay botones. Haz clic en \"+ Agregar Botón\" para comenzar.",
                 "selected": "Seleccionados",
                 "success": "Curso creado exitosamente."
             }

@@ -15,6 +15,8 @@ export interface CourseNodeData {
     type: 'video' | 'form' | 'menu' | 'info' | 'action'
     content: any
     video_url?: string
+    meeting_link?: string
+    show_description: boolean
     pos_x: number
     pos_y: number
     is_start: boolean

@@ -57,6 +57,7 @@
         "loading": "Loading...",
         "sidebarTitle": "Course Content",
         "contact": "Contact",
+        "schedule_meeting": "Schedule a meeting",
         "continue": "Continue",
         "finish": "Finish Course",
         "next_course_default": "Next Course",
@@ -85,7 +86,29 @@
             "delete_error_connected": "To delete this node, you must first disconnect it from other nodes (incoming and outgoing).",
             "default_connection_label": "Next",
             "modal": {
+                "create_title": "Configure New Lesson",
+                "edit_title": "Edit Lesson",
+                "subtitle": "Define the content type and details of this lesson.",
+                "field_title": "Lesson Title",
+                "field_title_placeholder": "E.g.: Introduction to the Business",
+                "field_type": "Content Type",
+                "field_description": "Lesson Description",
+                "field_description_placeholder": "Add a description, links, or additional documents...",
+                "field_video_url": "Video URL",
+                "field_video_url_optional": "Video URL (Optional)",
+                "field_description_optional": "Description (Optional)",
+                "field_description_label": "Description / Content",
+                "field_show_description": "Show to user",
+                "field_meeting_link": "Meeting Link:",
+                "field_meeting_link_placeholder": "https://calendly.com/... (Optional)",
+                "tabs": {
+                    "video": "Video Lesson",
+                    "form": "Registry / Form",
+                    "menu": "Menu / Buttons"
+                },
                 "form_fields_title": "Form Fields",
+                "menu_buttons_title": "Menu Buttons",
+                "menu_no_buttons": "No buttons yet. Click \"+ Add Button\" to start.",
                 "selected": "Selected"
             }
         },
