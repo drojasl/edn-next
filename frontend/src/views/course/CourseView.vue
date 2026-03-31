@@ -251,6 +251,23 @@ const getFieldIcon = (fieldName: string) => {
     default: return null
   }
 }
+
+const handleVideoLoad = (event: Event) => {
+  const iframe = event.target as HTMLIFrameElement
+  const speed = props.node?.playback_speed || 1.0
+  
+  if (speed !== 1.0) {
+    try {
+      iframe.contentWindow?.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'setPlaybackRate',
+        args: [speed, true]
+      }), '*')
+    } catch (e) {
+      console.error('Error setting playback rate:', e)
+    }
+  }
+}
 </script>
 
 <template>
@@ -275,10 +292,11 @@ const getFieldIcon = (fieldName: string) => {
         <iframe 
           v-if="getYoutubeId(node.video_url)"
           class="w-full h-full"
-          :src="`https://www.youtube.com/embed/${getYoutubeId(node.video_url)}?rel=0&modestbranding=1`"
+          :src="`https://www.youtube.com/embed/${getYoutubeId(node.video_url)}?rel=0&modestbranding=1&enablejsapi=1`"
           frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen
+          @load="handleVideoLoad"
         ></iframe>
         <div v-else class="w-full h-full flex items-center justify-center text-slate-500 italic">
           {{ $t('course.no_video_available') || 'Video no disponible' }}

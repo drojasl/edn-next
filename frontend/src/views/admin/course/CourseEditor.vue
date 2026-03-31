@@ -101,6 +101,7 @@ const syncNodesData = (updatedNodes: any[]) => {
                 title: serverNode.title,
                 type: serverNode.type,
                 video_url: serverNode.video_url,
+                playback_speed: serverNode.playback_speed,
                 content: serverNode.content
             }
         }
@@ -253,6 +254,7 @@ const handleAction = async ({ type, id }: { type: string, id: string }) => {
             title: node.data.title,
             type: node.data.type,
             video_url: node.data.video_url,
+            playback_speed: node.data.playback_speed,
             content: node.data.content
         })
     } else if (type === 'delete') {

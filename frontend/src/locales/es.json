@@ -135,6 +135,7 @@
                 "field_show_description": "Mostrar al usuario",
                 "field_meeting_link": "Enlace de Reunión:",
                 "field_meeting_link_placeholder": "https://calendly.com/... (Opcional)",
+                "playback_speed_description": "Velocidad por defecto al cargar",
                 "tabs": {
                     "video": "Lección Video",
                     "form": "Registro / Form",

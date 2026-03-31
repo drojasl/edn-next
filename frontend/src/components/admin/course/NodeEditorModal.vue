@@ -1,22 +1,16 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import VideoConfigFields from './VideoConfigFields.vue'
 
 const { t } = useI18n()
-
-const getYoutubeId = (url: string | undefined) => {
-    if (!url) return null
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-    const match = url.match(regExp)
-    const videoId = match?.[2]
-    return (videoId && videoId.length === 11) ? videoId : null
-}
 
 export interface NodeData {
     id?: number
     title: string
     type: 'video' | 'form' | 'menu'
     video_url?: string
+    playback_speed?: number
     meeting_link?: string
     show_description: boolean
     content?: {
@@ -35,6 +29,7 @@ const form = reactive<NodeData>({
     title: '',
     type: 'video',
     video_url: '',
+    playback_speed: 1.0,
     meeting_link: '',
     show_description: true,
     content: {
@@ -43,8 +38,6 @@ const form = reactive<NodeData>({
         buttons: []
     }
 })
-
-const videoPreviewId = computed(() => getYoutubeId(form.video_url))
 
 const AVAILABLE_FIELDS = [
     { name: 'name', labelKey: 'course.form.fields.name', type: 'text', icon: 'user', required: true, min: 5, max: 100 },
@@ -106,6 +99,7 @@ const open = (data?: Partial<NodeData>) => {
         isEditing.value = true
         Object.assign(form, {
             ...data,
+            playback_speed: data.playback_speed || 1.0,
             show_description: data.show_description !== undefined ? data.show_description : true,
             content: data.content || { description: '', fields: [], buttons: [] }
         })
@@ -117,6 +111,7 @@ const open = (data?: Partial<NodeData>) => {
             title: '',
             type: 'video',
             video_url: '',
+            playback_speed: 1.0,
             meeting_link: '',
             show_description: true,
             content: { 
@@ -248,31 +243,12 @@ defineExpose({ open, close })
                                     <!-- Conditional Content -->
                                     <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200">
                                         <!-- Video Content -->
-                                        <div v-if="form.type === 'video'" class="space-y-4">
-                                            <div class="flex items-end gap-3">
-                                                <div class="flex-1">
-                                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                                        {{ t('course.editor.modal.field_video_url') }}
-                                                    </label>
-                                                    <input 
-                                                        v-model="form.video_url"
-                                                        type="text" 
-                                                        class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                                        placeholder="https://youtube.com/..."
-                                                    />
-                                                </div>
-                                                <div v-if="videoPreviewId" class="w-32 shrink-0 rounded-lg overflow-hidden border border-slate-200 shadow-sm">
-                                                    <div class="aspect-video bg-slate-900">
-                                                        <iframe 
-                                                            class="w-full h-full"
-                                                            :src="`https://www.youtube.com/embed/${videoPreviewId}?rel=0&modestbranding=1`"
-                                                            frameborder="0"
-                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                            allowfullscreen
-                                                        ></iframe>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div v-if="form.type === 'video'">
+                                            <VideoConfigFields 
+                                                v-model:video-url="form.video_url"
+                                                v-model:playback-speed="form.playback_speed"
+                                                :label="t('course.editor.modal.field_video_url')"
+                                            />
                                         </div>
 
                                         <!-- Form Content -->
@@ -325,30 +301,11 @@ defineExpose({ open, close })
 
                                         <!-- Menu/Links Content -->
                                         <div v-if="form.type === 'menu'" class="space-y-4">
-                                            <div class="flex items-end gap-3">
-                                                <div class="flex-1">
-                                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                                        {{ t('course.editor.modal.field_video_url_optional') || 'URL del Video (Opcional)' }}
-                                                    </label>
-                                                    <input 
-                                                        v-model="form.video_url"
-                                                        type="text" 
-                                                        class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                                        placeholder="https://youtube.com/..."
-                                                    />
-                                                </div>
-                                                <div v-if="videoPreviewId" class="w-32 shrink-0 rounded-lg overflow-hidden border border-slate-200 shadow-sm">
-                                                    <div class="aspect-video bg-slate-900">
-                                                        <iframe 
-                                                            class="w-full h-full"
-                                                            :src="`https://www.youtube.com/embed/${videoPreviewId}?rel=0&modestbranding=1`"
-                                                            frameborder="0"
-                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                            allowfullscreen
-                                                        ></iframe>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <VideoConfigFields 
+                                                v-model:video-url="form.video_url"
+                                                v-model:playback-speed="form.playback_speed"
+                                                :label="t('course.editor.modal.field_video_url_optional')"
+                                            />
 
                                             <header class="flex items-center justify-between mb-2">
                                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
