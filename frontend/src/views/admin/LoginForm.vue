@@ -46,7 +46,7 @@ const validateForm = (): boolean => {
     errors.value.password = t('auth.errors.required')
     isValid = false
   } else if (password.value.length < 6) {
-    errors.value.password = t('auth.errors.min_length') || 'Mínimo 6 caracteres'
+    errors.value.password = t('auth.errors.min_length')
     isValid = false
   }
 
@@ -197,12 +197,12 @@ const handleLogin = async () => {
         <!-- Register Link -->
         <div class="mt-8 pt-6 border-t border-gray-100 text-center">
           <p class="text-sm text-gray-600">
-            {{ t('auth.login.noAccount') || '¿No tienes una cuenta?' }}
+            {{ t('auth.login.noAccount') }}
             <router-link
               to="/admin/register"
               class="ml-2 font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
             >
-              {{ t('auth.login.register') || 'Regístrate aquí' }}
+              {{ t('auth.login.register') }}
             </router-link>
           </p>
         </div>

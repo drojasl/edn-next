@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { apiRequest } from '../../api/apiClient'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 import CourseCreateModal from '../../components/admin/CourseCreateModal.vue'
 import { useDebounce } from '../../composables/useDebounce'
 import AppToast from '../../components/common/AppToast.vue'
@@ -161,17 +162,18 @@ onUnmounted(() => {
 
 <template>
     <div class="p-6 h-screen flex flex-col bg-slate-50">
-        <header class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-slate-800">{{ $t('course.management.title') }}</h1>
-            <div class="flex gap-2">
+        <AdminPageHeader 
+            :title="$t('course.management.title')"
+        >
+            <template #actions>
                 <button 
                     @click="openCreateModal"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-sm transition-all"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-sm transition-all whitespace-nowrap"
                 >
                     {{ $t('course.management.new_course') }}
                 </button>
-            </div>
-        </header>
+            </template>
+        </AdminPageHeader>
         
         <div class="flex-1 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden relative">
             <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">

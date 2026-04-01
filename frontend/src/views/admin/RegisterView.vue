@@ -39,10 +39,10 @@ const handleRegister = async (formData: any) => {
       <div class="bg-white rounded-2xl shadow-xl p-8 md:p-10">
         <div class="text-center mb-10">
           <h1 class="text-3xl font-bold text-gray-900 mb-2">
-            {{ t('auth.register.title') || 'Crea tu cuenta de Empresario' }}
+            {{ t('auth.register.title') }}
           </h1>
           <p class="text-gray-600">
-            {{ t('auth.register.subtitle') || 'Únete a nuestra plataforma educativa' }}
+            {{ t('auth.register.subtitle') }}
           </p>
         </div>
 
@@ -65,12 +65,12 @@ const handleRegister = async (formData: any) => {
 
         <div class="mt-8 pt-6 border-t border-gray-100 text-center">
           <p class="text-sm text-gray-600">
-            {{ t('auth.register.hasAccount') || '¿Ya tienes una cuenta?' }}
+            {{ t('auth.register.hasAccount') }}
             <router-link
               to="/admin/login"
               class="ml-2 font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
             >
-              {{ t('auth.login.submit') || 'Inicia sesión' }}
+              {{ t('auth.login.submit') }}
             </router-link>
           </p>
         </div>

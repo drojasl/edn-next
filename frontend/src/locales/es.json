@@ -47,7 +47,157 @@
             "slug_taken": "Slug ya está en uso",
             "confirm_delete": "¿Estás seguro de que quieres eliminar este empresario?",
             "no_users": "No hay empresarios registrados aún.",
-            "amway_code_readonly": "El código de empresario no se puede cambiar."
+            "amway_code_readonly": "El código de empresario no se puede cambiar.",
+            "table": {
+                "entrepreneur": "Empresario",
+                "amway_code": "Código Amway",
+                "email": "Email",
+                "status": "Estado",
+                "actions": "Acciones"
+            },
+            "role": {
+                "holder": "Titular",
+                "coholder": "Cotitular"
+            },
+            "status": {
+                "active": "Activo",
+                "inactive": "Inactivo"
+            },
+            "social": {
+                "title": "Datos de Contacto y Redes",
+                "add_label": "Plataforma",
+                "value_placeholder": "Usuario o Teléfono",
+                "error_url": "Por favor, usa solo el usuario (@nombre) o teléfono, no la URL completa.",
+                "platforms": {
+                    "cell_phone": {
+                        "label": "Celular",
+                        "placeholder": "Ej: +57300..."
+                    },
+                    "whatsapp": {
+                        "label": "WhatsApp",
+                        "placeholder": "Ej: +57300..."
+                    },
+                    "telegram": {
+                        "label": "Telegram",
+                        "placeholder": "Ej: @usuario o +57300..."
+                    },
+                    "instagram": {
+                        "label": "Instagram",
+                        "placeholder": "Ej: @usuario"
+                    },
+                    "facebook": {
+                        "label": "Facebook",
+                        "placeholder": "Ej: @usuario o nombre_de_pagina"
+                    },
+                    "tiktok": {
+                        "label": "TikTok",
+                        "placeholder": "Ej: @usuario"
+                    },
+                    "youtube": {
+                        "label": "YouTube",
+                        "placeholder": "Ej: @canal"
+                    }
+                },
+                "add_button": "Agregar Red Social"
+            }
+        },
+        "nav": {
+            "dashboard": "Dashboard",
+            "prospects": "Prospectos",
+            "courses": "Cursos",
+            "codes": "Códigos",
+            "profile": "Perfil",
+            "settings": "Configuración",
+            "logout": "Cerrar Sesión",
+            "viewProfile": "Ver Perfil",
+            "title": "EDN Admin"
+        },
+        "dashboard": {
+            "title": "Dashboard",
+            "welcome": "Bienvenido a tu panel de control, {name}.",
+            "preparing": "Gráficos en preparación",
+            "coming_soon": "Próximamente verás aquí tus estadísticas detalladas de visualizaciones y clics.",
+            "stats": {
+                "total_prospects": "Prospectos Totales",
+                "active_courses": "Cursos Activos",
+                "assigned_codes": "Códigos Asignados",
+                "conversion_rate": "Tasa de Conversión"
+            }
+        },
+        "codes": {
+            "title": "Códigos de Acceso",
+            "description": "Crea y gestiona códigos para invitar prospectos a tus cursos.",
+            "generate_new": "Generar Nuevo Código",
+            "generate": "Generar Código",
+            "code_label": "Código (Max 6 chars) *",
+            "course_assigned": "Curso Asignado *",
+            "select_course": "Selecciona un curso",
+            "expiration": "Expiración",
+            "no_expire": "No expira",
+            "2_days": "2 días",
+            "7_days": "7 días",
+            "15_days": "15 días",
+            "loading": "Cargando códigos...",
+            "table": {
+                "code": "Código",
+                "course": "Curso",
+                "expires": "Expira",
+                "no_codes": "No se encontraron códigos de acceso."
+            },
+            "usage_info": "Información de Uso",
+            "total_generated": "Total Generados",
+            "available": "Disponibles",
+            "delete_title": "Eliminar Código",
+            "delete_confirm": "¿Estás seguro de que deseas eliminar este código? ¡No podrás revertir esto!",
+            "delete_button": "Sí, eliminar",
+            "success_generate": "El código se ha generado correctamente",
+            "success_delete": "El código ha sido eliminado.",
+            "error_course": "Debe seleccionar un curso",
+            "error_invalid": "El código es inválido o ya existe",
+            "error_delete": "No se pudo eliminar el código",
+            "check_required": "El código es requerido",
+            "check_available": "Código disponible",
+            "check_taken": "Este código ya está en uso",
+            "error_course_deleted": "Curso eliminado"
+        },
+        "prospects": {
+            "title": "Prospectos",
+            "description": "Gestiona las personas interesadas que han dejado sus datos.",
+            "export_csv": "Exportar CSV",
+            "export": "Exportar CSV",
+            "loading": "Cargando prospectos...",
+            "no_prospects": "No hay prospectos registrados aún.",
+            "table": {
+                "name": "Nombre",
+                "email": "Email",
+                "phone": "Teléfono",
+                "location": "Locación",
+                "date": "Fecha",
+                "no_prospects": "No hay prospectos registrados aún.",
+                "unspecified": "No especificada",
+                "mark_new": "Marcar como nuevo",
+                "mark_reviewed": "Marcar como visto"
+            },
+            "csv": {
+                "filename": "prospectos",
+                "headers": {
+                    "name": "Nombre",
+                    "email": "Email",
+                    "phone": "Teléfono",
+                    "city": "Ciudad",
+                    "country": "País",
+                    "date": "Fecha",
+                    "reviewed": "Revisado"
+                },
+                "status": {
+                    "yes": "Sí",
+                    "no": "No"
+                }
+            }
+        },
+        "management": {
+            "delete": "Eliminar",
+            "edit": "Editar"
         }
     },
     "profile": {
@@ -67,7 +217,9 @@
         "confirm": "Confirmar",
         "cancel": "Cancelar",
         "error": "Ha ocurrido un error. Inténtalo de nuevo.",
-        "back_to_list": "Volver al listado"
+        "back_to_list": "Volver al listado",
+        "never": "Nunca",
+        "add": "Agregar"
     },
     "toast": {
         "error_title": "Acción Requerida",
@@ -190,6 +342,33 @@
                 "info": "Información",
                 "action": "Acción",
                 "course": "Curso"
+            }
+        },
+        "recovery": {
+            "button": "Retomar Progreso",
+            "title": "Retomar Progreso",
+            "subtitle": "Ingresa el correo que usaste anteriormente para recuperar tu avance.",
+            "email_label": "Correo Electrónico",
+            "email_placeholder": "ejemplo@correo.com",
+            "error_not_found": "No se encontró progreso para este correo.",
+            "error_no_code": "Código de acceso no encontrado."
+        }
+    },
+    "home": {
+        "title": "Panel de Control",
+        "welcome": "Bienvenido a la plataforma de la Escuela de Negocios Digital",
+        "cards": {
+            "courses": {
+                "title": "Mis Cursos",
+                "description": "Crea y diseña mapas educativos interactivos para tus prospectos."
+            },
+            "users": {
+                "title": "Empresarios",
+                "description": "Gestiona otros usuarios y colaboradores dentro de tu organización."
+            },
+            "profile": {
+                "title": "Mi Perfil",
+                "description": "Próximamente: Personaliza tu marca y enlaces de contacto."
             }
         }
     }

@@ -235,7 +235,7 @@ const handleRecoverProgress = async () => {
   }
 
   if (!code) {
-    recoveryError.value = 'Código de acceso no encontrado.'
+    recoveryError.value = t('course.recovery.error_no_code')
     recovering.value = false
     return
   }
@@ -278,7 +278,7 @@ const handleRecoverProgress = async () => {
     // Recargar todo el estado
     initializeCourse()
   } else {
-    recoveryError.value = result.error?.message || 'No se encontró progreso para este correo.'
+    recoveryError.value = result.error?.message || t('course.recovery.error_not_found')
   }
   recovering.value = false
 }
@@ -429,7 +429,7 @@ const getFullUrl = (path: string | null) => {
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Retomar Progreso
+                {{ t('course.recovery.button') }}
               </button>
             </div>
           </div>
@@ -440,18 +440,18 @@ const getFullUrl = (path: string | null) => {
           <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showRecoveryModal = false"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
             <div class="p-6 border-b border-slate-100">
-              <h3 class="text-xl font-bold text-slate-900">Retomar Progreso</h3>
-              <p class="text-sm text-slate-500 mt-1">Ingresa el correo que usaste anteriormente para recuperar tu avance.</p>
+              <h3 class="text-xl font-bold text-slate-900">{{ t('course.recovery.title') }}</h3>
+              <p class="text-sm text-slate-500 mt-1">{{ t('course.recovery.subtitle') }}</p>
             </div>
             
             <form @submit.prevent="handleRecoverProgress" class="p-6 space-y-4">
               <div class="space-y-2">
-                <label for="recovery-email" class="block text-sm font-bold text-slate-700 ml-1">Correo Electrónico</label>
+                <label for="recovery-email" class="block text-sm font-bold text-slate-700 ml-1">{{ t('course.recovery.email_label') }}</label>
                 <input 
                   type="email" 
                   id="recovery-email" 
                   v-model="recoveryEmail"
-                  placeholder="ejemplo@correo.com"
+                  :placeholder="t('course.recovery.email_placeholder')"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
                   required
                 />
@@ -467,10 +467,10 @@ const getFullUrl = (path: string | null) => {
                   @click="showRecoveryModal = false"
                   class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all"
                 >
-                  Cancelar
+                  {{ t('common.cancel') }}
                 </button>
                 <BaseButton 
-                  text="Recuperar"
+                  :text="t('course.recovery.button')"
                   type="submit"
                   :extra-props="{
                     loading: recovering,

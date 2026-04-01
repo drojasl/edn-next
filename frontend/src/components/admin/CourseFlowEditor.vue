@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseFlowEditor from './flow/BaseFlowEditor.vue'
 import { EDITOR_CONFIG } from '../../config/constants'
+
+const { t } = useI18n()
 
 interface Course {
     id: number
@@ -49,7 +52,7 @@ const initFlow = () => {
             id: `e-${c.id}-${c.next_course_id}`,
             source: c.id.toString(),
             target: c.next_course_id!.toString(),
-            label: c.next_course_label || 'Next',
+            label: c.next_course_label || t('course.editor.default_connection_label'),
             type: 'custom',
             animated: true
         }))
@@ -71,7 +74,7 @@ const handleSave = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
         const targetId = parseInt(edge.target)
         nextCourseMap.set(sourceId, { 
             next_course_id: targetId, 
-            next_course_label: edge.label || 'Next' 
+            next_course_label: edge.label || t('course.editor.default_connection_label') 
         })
     })
 

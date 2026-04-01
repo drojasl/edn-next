@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import EntrepreneurForm from '../../components/admin/user/EntrepreneurForm.vue'
 import { apiRequest } from '../../api/apiClient'
 import AppToast from '../../components/common/AppToast.vue'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 
 const authStore = useAuthStore()
 const { t } = useI18n()
@@ -96,7 +97,7 @@ const handleUpdateProfile = async (formData: any) => {
         })
 
         if (response.success) {
-            toastRef.value?.show(t('profile.update_success') || 'Perfil actualizado correctamente', 'success')
+            toastRef.value?.show(t('profile.update_success'), 'success')
             // Refresh user data in store
             profilePictureFile.value = null
             profilePicturePreview.value = null
@@ -119,14 +120,10 @@ onMounted(async () => {
 
 <template>
     <div class="max-w-4xl mx-auto">
-        <header class="mb-8">
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
-                {{ t('profile.title') || 'Mi Perfil' }}
-            </h1>
-            <p class="text-slate-500 mt-2">
-                {{ t('profile.subtitle') || 'Gestiona tu información personal y de acceso.' }}
-            </p>
-        </header>
+        <AdminPageHeader 
+            :title="t('profile.title')"
+            :description="t('profile.subtitle')"
+        />
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Sidebar Info -->
@@ -162,15 +159,15 @@ onMounted(async () => {
                         />
                     </div>
                     <h2 class="text-xl font-bold text-slate-900">{{ authStore.user?.name }} {{ authStore.user?.last_name }}</h2>
-                    <p class="text-slate-500 text-sm mt-1">{{ t('profile.role') || 'Empresario Amway' }}</p>
+                    <p class="text-slate-500 text-sm mt-1">{{ t('profile.role') }}</p>
                     
                     <div class="mt-4 pt-4 border-t border-slate-50 text-left space-y-3">
                         <div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('profile.amway_code') || 'Código Amway' }}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('profile.amway_code') }}</p>
                             <p class="text-sm font-mono font-bold text-slate-700">{{ authStore.user?.codigo_amway }}</p>
                         </div>
                         <div v-if="authStore.user?.slug">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('profile.slug_label') || 'Slug del Perfil' }}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('profile.slug_label') }}</p>
                             <p class="text-sm font-medium text-indigo-600">/cursos/{{ authStore.user?.slug }}</p>
                         </div>
                     </div>
@@ -181,7 +178,7 @@ onMounted(async () => {
             <div class="md:col-span-2">
                 <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
                     <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-50 pb-4">
-                        {{ t('profile.personal_info') || 'Información de la Cuenta' }}
+                        {{ t('profile.personal_info') }}
                     </h3>
                     
                     <EntrepreneurForm 

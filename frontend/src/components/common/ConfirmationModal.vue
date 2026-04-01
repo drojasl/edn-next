@@ -95,14 +95,14 @@ defineExpose({ open, close })
                                     :class="config.isDestructive ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'"
                                     @click="handleConfirm"
                                 >
-                                    {{ config.confirmText || $t('common.confirm') || 'Confirmar' }}
+                                    {{ config.confirmText || $t('common.confirm') }}
                                 </button>
                                 <button 
                                     type="button" 
                                     class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-all sm:mt-0 sm:w-auto"
                                     @click="close"
                                 >
-                                    {{ config.cancelText || $t('common.cancel') || 'Cancelar' }}
+                                    {{ config.cancelText || $t('common.cancel') }}
                                 </button>
                             </div>
                         </div>

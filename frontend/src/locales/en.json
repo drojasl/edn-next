@@ -8,14 +8,196 @@
             "password": "Password",
             "passwordPlaceholder": "Enter your password",
             "submit": "Sign In",
-            "loading": "Signing in..."
+            "loading": "Signing in...",
+            "noAccount": "Don't have an account?",
+            "register": "Register here"
+        },
+        "register": {
+            "title": "Entrepreneur Registration",
+            "subtitle": "Create your account to start managing your courses",
+            "hasAccount": "Already have an account?",
+            "confirmPassword": "Confirm Password"
         },
         "errors": {
             "required": "This field is required",
             "invalidCredentials": "Invalid Amway code or password",
             "serverError": "Server error. Please try again.",
             "networkError": "Connection error. Check your internet.",
-            "min_length": "Minimum 6 characters"
+            "min_length": "Minimum 6 characters",
+            "min_length_8": "Minimum 8 characters",
+            "password_mismatch": "Passwords do not match",
+            "invalid_email": "Invalid email address"
+        }
+    },
+    "admin": {
+        "users": {
+            "title": "Entrepreneur Management",
+            "subtitle": "Close educational gaps by managing your users",
+            "add_new": "New Entrepreneur",
+            "create_title": "Create New Entrepreneur",
+            "edit_title": "Edit Entrepreneur",
+            "name": "Name",
+            "last_name": "Last Name",
+            "email": "Email Address",
+            "slug": "Profile Slug (ex: diego-perez)",
+            "is_active": "Active Account",
+            "submit": "Create Entrepreneur",
+            "update": "Update Entrepreneur",
+            "slug_available": "Slug available",
+            "slug_taken": "Slug is already in use",
+            "confirm_delete": "Are you sure you want to delete this entrepreneur?",
+            "no_users": "No entrepreneurs registered yet.",
+            "amway_code_readonly": "The entrepreneur code cannot be changed.",
+            "table": {
+                "entrepreneur": "Entrepreneur",
+                "amway_code": "Amway Code",
+                "email": "Email",
+                "status": "Status",
+                "actions": "Actions"
+            },
+            "role": {
+                "holder": "Primary Holder",
+                "coholder": "Co-holder"
+            },
+            "status": {
+                "active": "Active",
+                "inactive": "Inactive"
+            },
+            "social": {
+                "title": "Contact Information and Social Networks",
+                "add_label": "Platform",
+                "value_placeholder": "Username or Phone",
+                "error_url": "Please use only the username (@name) or phone, not the full URL.",
+                "platforms": {
+                    "cell_phone": {
+                        "label": "Cell Phone",
+                        "placeholder": "Ex: +1234..."
+                    },
+                    "whatsapp": {
+                        "label": "WhatsApp",
+                        "placeholder": "Ex: +1234..."
+                    },
+                    "telegram": {
+                        "label": "Telegram",
+                        "placeholder": "Ex: @user or +1234..."
+                    },
+                    "instagram": {
+                        "label": "Instagram",
+                        "placeholder": "Ex: @user"
+                    },
+                    "facebook": {
+                        "label": "Facebook",
+                        "placeholder": "Ex: @user or pagename"
+                    },
+                    "tiktok": {
+                        "label": "TikTok",
+                        "placeholder": "Ex: @user"
+                    },
+                    "youtube": {
+                        "label": "YouTube",
+                        "placeholder": "Ex: @channel"
+                    }
+                },
+                "add_button": "Add Social Network"
+            }
+        },
+        "nav": {
+            "dashboard": "Dashboard",
+            "prospects": "Prospects",
+            "courses": "Courses",
+            "codes": "Codes",
+            "profile": "Profile",
+            "settings": "Settings",
+            "logout": "Logout",
+            "viewProfile": "View Profile",
+            "title": "EDN Admin"
+        },
+        "dashboard": {
+            "title": "Dashboard",
+            "welcome": "Welcome to your control panel, {name}.",
+            "preparing": "Charts in preparation",
+            "coming_soon": "Coming soon you will see here your detailed statistics of views and clicks.",
+            "stats": {
+                "total_prospects": "Total Prospects",
+                "active_courses": "Active Courses",
+                "assigned_codes": "Assigned Codes",
+                "conversion_rate": "Conversion Rate"
+            }
+        },
+        "codes": {
+            "title": "Access Codes",
+            "description": "Create and manage codes to invite prospects to your courses.",
+            "generate_new": "Generate New Code",
+            "generate": "Generate Code",
+            "code_label": "Code (Max 6 chars) *",
+            "course_assigned": "Assigned Course *",
+            "select_course": "Select a course",
+            "expiration": "Expiration",
+            "no_expire": "No expires",
+            "2_days": "2 days",
+            "7_days": "7 days",
+            "15_days": "15 days",
+            "loading": "Loading codes...",
+            "table": {
+                "code": "Code",
+                "course": "Course",
+                "expires": "Expires",
+                "no_codes": "No access codes found."
+            },
+            "usage_info": "Usage Information",
+            "total_generated": "Total Generated",
+            "available": "Available",
+            "delete_title": "Delete Code",
+            "delete_confirm": "Are you sure you want to delete this code? You won't be able to revert this!",
+            "delete_button": "Yes, delete",
+            "success_generate": "Code generated successfully",
+            "success_delete": "Code has been deleted.",
+            "error_course": "You must select a course",
+            "error_invalid": "Code is invalid or already exists",
+            "error_delete": "Could not delete code",
+            "check_required": "Code is required",
+            "check_available": "Code available",
+            "check_taken": "This code is already in use",
+            "error_course_deleted": "Course deleted"
+        },
+        "prospects": {
+            "title": "Prospects",
+            "description": "Manage people interested who have left their data.",
+            "export_csv": "Export CSV",
+            "export": "Export CSV",
+            "loading": "Loading prospects...",
+            "no_prospects": "No prospects registered yet.",
+            "table": {
+                "name": "Name",
+                "email": "Email",
+                "phone": "Phone",
+                "location": "Location",
+                "date": "Date",
+                "no_prospects": "No prospects registered yet.",
+                "unspecified": "Unspecified",
+                "mark_new": "Mark as new",
+                "mark_reviewed": "Mark as reviewed"
+            },
+            "csv": {
+                "filename": "prospects",
+                "headers": {
+                    "name": "Name",
+                    "email": "Email",
+                    "phone": "Phone",
+                    "city": "City",
+                    "country": "Country",
+                    "date": "Date",
+                    "reviewed": "Reviewed"
+                },
+                "status": {
+                    "yes": "Yes",
+                    "no": "No"
+                }
+            }
+        },
+        "management": {
+            "delete": "Delete",
+            "edit": "Edit"
         }
     },
     "profile": {
@@ -34,7 +216,10 @@
         "english": "English",
         "confirm": "Confirm",
         "cancel": "Cancel",
-        "error": "An error occurred. Please try again."
+        "error": "An error occurred. Please try again.",
+        "back_to_list": "Back to list",
+        "never": "Never",
+        "add": "Add"
     },
     "toast": {
         "error_title": "Action Required",
@@ -83,8 +268,9 @@
             "delete": "Delete Node",
             "delete_confirm": "Are you sure you want to delete this node?",
             "delete_success": "Node deleted successfully.",
+            "save_success": "Node saved successfully.",
             "delete_error_connected": "To delete this node, you must first disconnect it from other nodes (incoming and outgoing).",
-            "default_connection_label": "Next",
+            "default_connection_label": "Continue",
             "modal": {
                 "create_title": "Configure New Lesson",
                 "edit_title": "Edit Lesson",
@@ -101,24 +287,34 @@
                 "field_show_description": "Show to user",
                 "field_meeting_link": "Meeting Link:",
                 "field_meeting_link_placeholder": "https://calendly.com/... (Optional)",
+                "playback_speed_description": "Default playback speed",
                 "tabs": {
                     "video": "Video Lesson",
                     "form": "Registry / Form",
                     "menu": "Menu / Buttons"
                 },
+                "form_placeholder": "This node will serve as a data capture point.",
+                "menu_placeholder": "This node will show options for the user to choose their path.",
+                "save": "Save and Add to Map",
                 "form_fields_title": "Form Fields",
                 "menu_buttons_title": "Menu Buttons",
                 "menu_no_buttons": "No buttons yet. Click \"+ Add Button\" to start.",
-                "selected": "Selected"
+                "selected": "Selected",
+                "success": "Course created successfully."
             }
         },
         "management": {
             "title": "Course Management",
             "new_course": "+ New Course",
+            "modal": {
+                "subtitle": "Enter the course name to start designing your map.",
+                "create_button": "Create Course and Go to Editor"
+            },
             "edit": "Edit",
             "delete": "Delete",
             "delete_confirm": "Are you sure you want to delete this course?",
             "delete_success": "Course deleted successfully.",
+            "save_success": "Course saved successfully.",
             "delete_error_connected": "To delete this course, you must first disconnect it from other courses (incoming and outgoing).",
             "delete_connection_confirm": "Are you sure you want to delete this connection?"
         },
@@ -147,6 +343,33 @@
                 "action": "Action",
                 "course": "Course"
             }
+        },
+        "recovery": {
+            "button": "Resume Progress",
+            "title": "Resume Progress",
+            "subtitle": "Enter the email you used previously to recover your progress.",
+            "email_label": "Email Address",
+            "email_placeholder": "example@email.com",
+            "error_not_found": "No progress found for this email.",
+            "error_no_code": "Access code not found."
+        }
+    },
+    "home": {
+        "title": "Control Panel",
+        "welcome": "Welcome to the Digital Business School platform",
+        "cards": {
+            "courses": {
+                "title": "My Courses",
+                "description": "Create and design interactive educational maps for your prospects."
+            },
+            "users": {
+                "title": "Entrepreneurs",
+                "description": "Manage other users and collaborators within your organization."
+            },
+            "profile": {
+                "title": "My Profile",
+                "description": "Coming soon: Customize your brand and contact links."
+            }
         }
     }
-}
+}

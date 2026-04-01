@@ -255,13 +255,13 @@ defineExpose({ open, close })
                                         <div v-if="form.type === 'form'" class="space-y-4">
                                             <header class="flex items-center justify-between mb-2">
                                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                                    {{ t('course.editor.modal.form_fields_title') || 'Campos del Formulario' }}
+                                                    {{ t('course.editor.modal.form_fields_title') }}
                                                 </label>
                                                 <span 
                                                     class="text-[10px] font-bold px-2 py-0.5 rounded-full"
                                                     :class="submitted && (!form.content?.fields || form.content.fields.length === 0) ? 'bg-red-100 text-red-600' : 'bg-indigo-50 text-indigo-500'"
                                                 >
-                                                    {{ form.content?.fields?.length || 0 }} {{ t('course.editor.modal.selected') || 'Seleccionados' }}
+                                                    {{ form.content?.fields?.length || 0 }} {{ t('course.editor.modal.selected') }}
                                                 </span>
                                             </header>
                                             <p v-if="submitted && form.type === 'form' && (!form.content?.fields || form.content.fields.length === 0)" class="mb-3 text-xs font-bold text-red-600">
@@ -309,7 +309,7 @@ defineExpose({ open, close })
 
                                             <header class="flex items-center justify-between mb-2">
                                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                                    {{ t('course.editor.modal.menu_buttons_title') || 'Botones del Menú' }}
+                                                    {{ t('course.editor.modal.menu_buttons_title') }}
                                                 </label>
                                                 <button @click="addButton()" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition-colors flex items-center gap-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3">

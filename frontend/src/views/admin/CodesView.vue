@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { apiRequest } from '../../api/apiClient'
 import AppToast from '../../components/common/AppToast.vue'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
+import AdminDataTable from '../../components/admin/AdminDataTable.vue'
 
 interface Course {
     id: number;
@@ -25,6 +28,7 @@ const codes = ref<AccessCode[]>([])
 const courses = ref<Course[]>([])
 const isLoading = ref(true)
 
+const { t, locale } = useI18n()
 const toastRef = ref<InstanceType<typeof AppToast> | null>(null)
 const modalRef = ref<InstanceType<typeof ConfirmationModal> | null>(null)
 
@@ -93,7 +97,7 @@ const openGenerateModal = () => {
 
 const checkCode = async () => {
     if (!newCodeData.value.code) {
-        codeAvailability.value = { checking: false, available: false, message: 'El código es requerido' }
+        codeAvailability.value = { checking: false, available: false, message: t('admin.codes.check_required') }
         return
     }
 
@@ -108,8 +112,8 @@ const checkCode = async () => {
         if (result.success) {
             codeAvailability.value.available = result.data.available
             codeAvailability.value.message = result.data.available 
-                ? 'Código disponible'
-                : 'Este código ya está en uso'
+                ? t('admin.codes.check_available')
+                : t('admin.codes.check_taken')
         }
     } catch (error) {
         console.error('Error checking code:', error)
@@ -126,11 +130,11 @@ watch(() => newCodeData.value.code, () => {
 
 const handleGenerateCode = async () => {
     if (!newCodeData.value.course_id) {
-        toastRef.value?.show('Debe seleccionar un curso', 'error')
+        toastRef.value?.show(t('admin.codes.error_course'), 'error')
         return
     }
     if (!newCodeData.value.code || !codeAvailability.value.available) {
-        toastRef.value?.show('El código es inválido o ya existe', 'error')
+        toastRef.value?.show(t('admin.codes.error_invalid'), 'error')
         return
     }
 
@@ -145,23 +149,23 @@ const handleGenerateCode = async () => {
             }
         })
         if (response.success && response.data) {
-            toastRef.value?.show('El código se ha generado correctamente', 'success')
+            toastRef.value?.show(t('admin.codes.success_generate'), 'success')
             showModal.value = false
             fetchCodes()
         } else {
-            toastRef.value?.show(response.error?.message || 'Hubo un error al generar el código', 'error')
+            toastRef.value?.show(response.error?.message || t('admin.codes.error_generate_fail'), 'error')
         }
     } catch (e: any) {
-        toastRef.value?.show(e.message || 'Error al conectar con el servidor', 'error')
+        toastRef.value?.show(e.message || t('common.error'), 'error')
     }
 }
 
 const handleDeleteCode = (id: number) => {
     modalRef.value?.open({
-        title: 'Eliminar Código',
-        message: '¿Estás seguro de que deseas eliminar este código? ¡No podrás revertir esto!',
+        title: t('admin.codes.delete_title'),
+        message: t('admin.codes.delete_confirm'),
         isDestructive: true,
-        confirmText: 'Sí, eliminar',
+        confirmText: t('admin.codes.delete_button'),
         onConfirm: async () => {
             try {
                 const response = await apiRequest({
@@ -169,14 +173,14 @@ const handleDeleteCode = (id: number) => {
                     url: `/v1/admin/access-codes/${id}`,
                 })
                 if (response.success) {
-                    toastRef.value?.show('El código ha sido eliminado.', 'success')
+                    toastRef.value?.show(t('admin.codes.success_delete'), 'success')
                     fetchCodes()
                 } else {
-                    toastRef.value?.show(response.error?.message || 'No se pudo eliminar el código', 'error')
+                    toastRef.value?.show(response.error?.message || t('admin.codes.error_delete'), 'error')
                 }
             } catch (e) {
                 console.error('Error deleting code:', e)
-                toastRef.value?.show('Error de conexión', 'error')
+                toastRef.value?.show(t('common.error'), 'error')
             }
         }
     })
@@ -188,8 +192,8 @@ onMounted(() => {
 })
 
 const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Nunca';
-    return new Date(dateString).toLocaleDateString('es-ES', {
+    if (!dateString) return t('common.never');
+    return new Date(dateString).toLocaleDateString(locale.value === 'en' ? 'en-US' : 'es-ES', {
         year: 'numeric', month: 'short', day: 'numeric'
     });
 }
@@ -197,24 +201,25 @@ const formatDate = (dateString: string | null) => {
 
 <template>
     <div>
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Códigos de Acceso</h1>
-                <p class="text-slate-500 mt-2">Crea y gestiona códigos para invitar prospectos a tus cursos.</p>
-            </div>
-            <button @click="openGenerateModal" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Generar Nuevo Código
-            </button>
-        </header>
+        <AdminPageHeader 
+            :title="$t('admin.codes.title')" 
+            :description="$t('admin.codes.description')"
+        >
+            <template #actions>
+                <button @click="openGenerateModal" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    {{ $t('admin.codes.generate_new') }}
+                </button>
+            </template>
+        </AdminPageHeader>
 
         <!-- Generate Code Modal -->
         <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
             <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-900">Generar Código</h2>
+                    <h2 class="text-xl font-bold text-slate-900">{{ $t('admin.codes.generate') }}</h2>
                     <button @click="showModal = false" class="text-slate-400 hover:text-slate-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -224,7 +229,7 @@ const formatDate = (dateString: string | null) => {
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Código (Max 6 chars) *</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('admin.codes.code_label') }}</label>
                         <div class="relative">
                             <input
                                 v-model="newCodeData.code"
@@ -249,29 +254,29 @@ const formatDate = (dateString: string | null) => {
                         </p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Curso Asignado *</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('admin.codes.course_assigned') }}</label>
                         <select v-model="newCodeData.course_id" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Selecciona un curso</option>
+                            <option value="">{{ $t('admin.codes.select_course') }}</option>
                             <option v-for="course in courses" :key="course.id" :value="course.id">{{ course.title }}</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Expiración</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('admin.codes.expiration') }}</label>
                         <select v-model="newCodeData.expiration_days" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">No expira</option>
-                            <option value="2">2 días</option>
-                            <option value="7">7 días</option>
-                            <option value="15">15 días</option>
+                            <option value="">{{ $t('admin.codes.no_expire') }}</option>
+                            <option value="2">{{ $t('admin.codes.2_days') }}</option>
+                            <option value="7">{{ $t('admin.codes.7_days') }}</option>
+                            <option value="15">{{ $t('admin.codes.15_days') }}</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-3 mt-8">
                     <button @click="showModal = false" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors">
-                        Cancelar
+                        {{ $t('common.cancel') }}
                     </button>
                     <button @click="handleGenerateCode" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="!codeAvailability.available || codeAvailability.checking || !newCodeData.code">
-                        Generar
+                        {{ $t('admin.codes.generate') }}
                     </button>
                 </div>
             </div>
@@ -279,48 +284,40 @@ const formatDate = (dateString: string | null) => {
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Table Section -->
-            <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <div v-if="isLoading" class="p-8 text-center text-slate-500">
-                    Cargando códigos...
-                </div>
-                <table v-else class="w-full text-left">
-                    <thead class="bg-slate-50 border-b border-slate-100">
-                        <tr>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Código</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Curso</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Expira</th>
-                            <th class="px-6 py-4"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr v-if="codes.length === 0">
-                            <td colspan="4" class="px-6 py-8 text-center text-slate-500">
-                                No se encontraron códigos de acceso.
-                            </td>
-                        </tr>
-                        <tr v-for="item in codes" :key="item.id" class="hover:bg-slate-50/30 transition-colors">
-                            <td class="px-6 py-4 font-mono font-bold text-indigo-600 uppercase">{{ item.code }}</td>
-                            <td class="px-6 py-4 text-slate-700">{{ item.course?.title || 'Curso eliminado' }}</td>
-                            <td class="px-6 py-4 text-slate-600">{{ formatDate(item.expires_at) }}</td>
-                            <td class="px-6 py-4 text-right">
-                                <button @click="handleDeleteCode(item.id)" class="text-slate-400 hover:text-red-600 transition-colors">Eliminar</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="lg:col-span-2">
+                <AdminDataTable
+                    :headers="[
+                        { label: $t('admin.codes.table.code') },
+                        { label: $t('admin.codes.table.course') },
+                        { label: $t('admin.codes.table.expires') },
+                        { label: '' }
+                    ]"
+                    :loading="isLoading"
+                    :hasData="codes.length > 0"
+                    :emptyMessage="$t('admin.codes.table.no_codes')"
+                >
+                    <tr v-for="item in codes" :key="item.id" class="hover:bg-slate-50/30 transition-colors">
+                        <td class="px-6 py-4 font-mono font-bold text-indigo-600 uppercase">{{ item.code }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ item.course?.title || $t('admin.codes.error_course_deleted') }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ formatDate(item.expires_at) }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button @click="handleDeleteCode(item.id)" class="text-slate-400 hover:text-red-600 transition-colors">{{ $t('admin.management.delete') }}</button>
+                        </td>
+                    </tr>
+                </AdminDataTable>
             </div>
 
             <!-- Stats/Info Sidebar -->
             <div class="space-y-6">
                 <div class="bg-indigo-900 rounded-2xl p-6 text-white shadow-xl">
-                    <h3 class="font-bold text-lg mb-4">Información de Uso</h3>
+                    <h3 class="font-bold text-lg mb-4">{{ $t('admin.codes.usage_info') }}</h3>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center opacity-80">
-                            <span>Total Generados</span>
+                            <span>{{ $t('admin.codes.total_generated') }}</span>
                             <span class="font-bold">{{ codes.length }}</span>
                         </div>
                         <div class="flex justify-between items-center opacity-80">
-                            <span>Disponibles</span>
+                            <span>{{ $t('admin.codes.available') }}</span>
                             <span class="font-bold">{{ codes.filter(c => c.is_active).length }}</span>
                         </div>
                         <div v-if="codes.length > 0" class="w-full bg-indigo-800 h-2 rounded-full overflow-hidden">

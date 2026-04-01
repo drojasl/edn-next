@@ -299,7 +299,7 @@ const handleVideoLoad = (event: Event) => {
           @load="handleVideoLoad"
         ></iframe>
         <div v-else class="w-full h-full flex items-center justify-center text-slate-500 italic">
-          {{ $t('course.no_video_available') || 'Video no disponible' }}
+          {{ $t('course.no_video_available') }}
         </div>
       </div>
 
@@ -319,7 +319,7 @@ const handleVideoLoad = (event: Event) => {
       <div class="max-w-md mx-auto w-full">
         <div class="px-8 py-10">
           <h2 class="text-3xl font-bold text-slate-800 mb-8 text-center">
-            {{ $t('course.form.title') || 'Introduce tus datos' }}
+            {{ $t('course.form.title') }}
           </h2>
           
           <form @submit.prevent="handleFormSubmit" class="space-y-5">
@@ -373,7 +373,7 @@ const handleVideoLoad = (event: Event) => {
                 <span v-if="formSubmitting" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
                 <span v-else-if="!isFormValid" class="text-white/70 text-base">Completa los campos requeridos</span>
                 <template v-else>
-                  {{ node.content?.submit_label || $t('course.form.access') || 'Acceder' }}
+                  {{ node.content?.submit_label || $t('course.form.access') }}
                 </template>
               </button>
             </div>
