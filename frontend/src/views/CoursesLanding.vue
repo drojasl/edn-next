@@ -15,6 +15,15 @@ const errorMessage = ref('')
 
 const rotateDegrees = ref(0)
 
+const getSessionId = () => {
+  let sessionId = localStorage.getItem('prospect_session_id')
+  if (!sessionId) {
+    sessionId = crypto.randomUUID()
+    localStorage.setItem('prospect_session_id', sessionId)
+  }
+  return sessionId
+}
+
 const handleSubmit = async () => {
   if (!accessCode.value) return
   loading.value = true
@@ -23,7 +32,10 @@ const handleSubmit = async () => {
   const result = await apiRequest({
     method: 'POST',
     url: '/v1/public/access-codes/validate',
-    body: { code: accessCode.value }
+    body: { 
+      code: accessCode.value,
+      session_id: getSessionId()
+    }
   });
 
   if (result.success && result.data) {

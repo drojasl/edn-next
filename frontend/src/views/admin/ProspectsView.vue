@@ -153,7 +153,7 @@ onMounted(() => {
                 :class="[
                     prospect.is_reviewed 
                         ? 'bg-white border-transparent grayscale-[0.5] opacity-80' 
-                        : 'bg-indigo-50/60 border-indigo-600 hover:bg-indigo-50/80 shadow-[inset_0_0_0_1px_rgba(79,70,229,0.05)]'
+                        : 'bg-indigo-50/60 border-l-indigo-600 hover:bg-indigo-50/80 shadow-[inset_0_0_0_1px_rgba(79,70,229,0.05)]'
                 ]"
             >
                 <td class="px-6 py-4 whitespace-nowrap">

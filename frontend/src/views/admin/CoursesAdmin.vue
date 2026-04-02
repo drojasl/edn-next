@@ -161,21 +161,22 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="p-6 h-screen flex flex-col bg-slate-50">
+    <div class="flex flex-col gap-6">
         <AdminPageHeader 
             :title="$t('course.management.title')"
         >
             <template #actions>
                 <button 
                     @click="openCreateModal"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-sm transition-all whitespace-nowrap"
+                    class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2"
                 >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                     {{ $t('course.management.new_course') }}
                 </button>
             </template>
         </AdminPageHeader>
         
-        <div class="flex-1 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden relative">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative min-h-[600px] h-[calc(100vh-16rem)]">
             <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>

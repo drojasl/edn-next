@@ -19,6 +19,7 @@ Route::prefix('v1/public')->group(function () {
     // Prospect Progress
     Route::post('/prospect/sync', [App\Http\Controllers\Api\Public\ProspectProgressController::class, 'sync']);
     Route::post('/prospect/recover', [App\Http\Controllers\Api\Public\ProspectProgressController::class, 'recover']);
+    Route::post('/prospect/track-node', [App\Http\Controllers\Api\Public\ProspectProgressController::class, 'trackNode']);
 });
 
 // Legacy routes (if needed)
@@ -57,5 +58,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Prospects
         Route::get('prospects', [\App\Http\Controllers\Api\Admin\ProspectController::class, 'index']);
         Route::patch('prospects/{prospect}/toggle-review', [\App\Http\Controllers\Api\Admin\ProspectController::class, 'toggleReview']);
+
+        // Stats
+        Route::get('stats/funnel', [\App\Http\Controllers\Api\Admin\AdminStatsController::class, 'funnel']);
     });
-});
+ });

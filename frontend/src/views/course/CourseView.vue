@@ -18,6 +18,10 @@ const formData = reactive<Record<string, any>>({})
 
 // Initialize formData when node changes
 watch(() => props.node, (newNode) => {
+  if (newNode?.id) {
+    trackNode(newNode.id)
+  }
+  
   if (newNode?.type === 'form') {
     // Clear previous data
     Object.keys(formData).forEach(key => delete formData[key])
@@ -129,6 +133,7 @@ const syncProgressWithBackend = async (data: Record<string, any>) => {
     code,
     progress,   // always send as object, even if empty {}
     completed,
+    session_id: localStorage.getItem('prospect_session_id')
   }
   const knownProspectFields = ['name', 'email', 'phone', 'city', 'country', 'amway_code']
   knownProspectFields.forEach(key => {
@@ -142,6 +147,48 @@ const syncProgressWithBackend = async (data: Record<string, any>) => {
     url: '/v1/public/prospect/sync',
     body: prospectPayload,
   })
+}
+
+const trackNode = async (nodeId: number) => {
+  // Check if already seen on this device to avoid double counting (as requested)
+  const seenNodesRaw = localStorage.getItem('seen_nodes')
+  const seenNodes: number[] = seenNodesRaw ? JSON.parse(seenNodesRaw) : []
+  
+  if (seenNodes.includes(nodeId)) {
+    return
+  }
+
+  const accessDataRaw = localStorage.getItem('course_access')
+  let code = ''
+  if (accessDataRaw) {
+    try {
+      const accessData = JSON.parse(accessDataRaw)
+      code = accessData.accessCode
+    } catch (e) {
+      console.error('Error reading access code', e)
+    }
+  }
+
+  if (!code) return
+
+  const sessionId = localStorage.getItem('prospect_session_id')
+  const email = localStorage.getItem('prospect_email')
+
+  const result = await apiRequest({
+    method: 'POST',
+    url: '/v1/public/prospect/track-node',
+    body: {
+      code,
+      node_id: nodeId,
+      session_id: sessionId,
+      email: email || null
+    }
+  })
+
+  if (result.success) {
+    seenNodes.push(nodeId)
+    localStorage.setItem('seen_nodes', JSON.stringify(seenNodes))
+  }
 }
 
 const handleFormSubmit = async () => {

@@ -64,13 +64,13 @@ onMounted(fetchEntrepreneur)
 </script>
 
 <template>
-  <div class="p-8 max-w-4xl mx-auto">
-    <div class="mb-4">
+  <div class="max-w-4xl mx-auto py-4 sm:py-0">
+    <div class="mb-6">
       <button 
         @click="router.push('/admin/users')"
-        class="flex items-center text-slate-500 hover:text-indigo-600 transition-colors font-medium text-sm"
+        class="group flex items-center text-slate-500 hover:text-indigo-600 transition-colors font-medium text-sm"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 transition-transform group-hover:-translate-x-1" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
         </svg>
         {{ $t('common.back_to_list') }}
@@ -79,19 +79,22 @@ onMounted(fetchEntrepreneur)
     
     <AdminPageHeader 
       :title="$t('admin.users.edit_title')"
+      class="mb-8"
     />
 
     <!-- Loading State -->
-    <div v-if="fetching" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-20 flex justify-center">
+    <div v-if="fetching" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-20 flex flex-col items-center justify-center gap-4">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <p class="text-slate-500 font-medium animate-pulse">{{ $t('common.loading') }}</p>
     </div>
 
     <!-- Error Message -->
-    <div v-else-if="errorMessage" class="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-      {{ errorMessage }}
+    <div v-else-if="errorMessage" class="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-start gap-3 fade-in">
+        <svg class="w-5 h-5 mt-0.5 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        <span>{{ errorMessage }}</span>
     </div>
 
-    <div v-else class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <div v-else class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-8">
       <EntrepreneurForm 
         mode="edit" 
         :initial-data="entrepreneur"

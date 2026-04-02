@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
+use App\Models\ProspectAccessLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -17,9 +18,11 @@ class PublicAccessController extends Controller
     {
         $request->validate([
             'code' => 'required|string',
+            'session_id' => 'required|string',
         ]);
 
         $code = $request->input('code');
+        $sessionId = $request->input('session_id');
 
         // Search for the access code with related user (entrepreneur) and course
         $accessCode = AccessCode::where('code', $code)
@@ -55,6 +58,15 @@ class PublicAccessController extends Controller
                 'message' => 'El curso asociado no está disponible.'
             ], 404);
         }
+
+        // Log the access (visit)
+        ProspectAccessLog::updateOrCreate([
+            'session_id' => $sessionId,
+            'access_code_id' => $accessCode->id,
+            'prospect_id' => null, // Will be linked later if they register
+        ], [
+            'activated_at' => now(),
+        ]);
 
         return response()->json([
             'entrepreneurSlug' => $user->slug,

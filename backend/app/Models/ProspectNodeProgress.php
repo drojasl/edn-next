@@ -12,6 +12,8 @@ class ProspectNodeProgress extends Model
     protected $fillable = [
         'prospect_id',
         'course_node_id',
+        'access_code_id',
+        'session_id',
         'viewed_at',
         'data',
     ];
@@ -29,5 +31,10 @@ class ProspectNodeProgress extends Model
     public function node()
     {
         return $this->belongsTo(CourseNode::class, 'course_node_id');
+    }
+
+    public function accessCode()
+    {
+        return $this->belongsTo(AccessCode::class);
     }
 }

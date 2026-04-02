@@ -31,8 +31,9 @@ class ProspectProgressController extends Controller
             'country' => 'nullable|string|min:5|max:50',
             'accept_terms' => 'nullable|boolean',
             'code' => 'required|string',
-            'progress' => 'nullable|array', // { course_slug: max_position } — can be empty on first visit
-            'completed' => 'nullable|array', // [course_slug, ...]
+            'progress' => 'nullable|array',
+            'completed' => 'nullable|array',
+            'session_id' => 'nullable|string',
         ]);
 
         return DB::transaction(function () use ($validated) {
@@ -52,12 +53,24 @@ class ProspectProgressController extends Controller
             );
 
             // Vincular prospecto con el empresario (access_log)
-            ProspectAccessLog::firstOrCreate([
+            $accessLog = ProspectAccessLog::firstOrCreate([
                 'prospect_id' => $prospect->id,
                 'access_code_id' => $accessCode->id,
             ], [
                 'activated_at' => now(),
+                'session_id' => $validated['session_id'] ?? null,
             ]);
+
+            // Si vino con session_id, vincular todos los logs huérfanos de esa sesión a este prospecto
+            if (!empty($validated['session_id'])) {
+                ProspectAccessLog::where('session_id', $validated['session_id'])
+                    ->whereNull('prospect_id')
+                    ->update(['prospect_id' => $prospect->id]);
+
+                ProspectNodeProgress::where('session_id', $validated['session_id'])
+                    ->whereNull('prospect_id')
+                    ->update(['prospect_id' => $prospect->id]);
+            }
 
             // Sincronizar nodos vistos (solo si hay progreso)
             foreach (($validated['progress'] ?? []) as $courseSlug => $maxPos) {
@@ -158,12 +171,43 @@ class ProspectProgressController extends Controller
             ->with('course:id,slug')
             ->get()
             ->pluck('course.slug');
-
         return response()->json([
             'success' => true,
             'progress' => $progressMap,
             'completed' => $completed,
             'history' => $history
         ]);
+    }
+
+    /**
+     * Track a node view (real-time).
+     */
+    public function trackNode(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => 'required|string',
+            'node_id' => 'required|exists:course_nodes,id',
+            'session_id' => 'required|string',
+            'email' => 'nullable|email', // Optional, if they already registered in this session
+        ]);
+
+        $accessCode = AccessCode::where('code', $validated['code'])->firstOrFail();
+        
+        $prospectId = null;
+        if (!empty($validated['email'])) {
+            $prospectId = Prospect::where('email', $validated['email'])->value('id');
+        }
+
+        // Record the progress
+        $progress = ProspectNodeProgress::firstOrCreate([
+            'prospect_id' => $prospectId,
+            'course_node_id' => $validated['node_id'],
+            'access_code_id' => $accessCode->id,
+            'session_id' => $validated['session_id'],
+        ], [
+            'viewed_at' => now(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

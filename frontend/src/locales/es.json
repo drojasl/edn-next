@@ -114,13 +114,14 @@
         },
         "dashboard": {
             "title": "Dashboard",
+            "funnel_title": "Rendimiento y Embudo de Prospectos",
             "welcome": "Bienvenido a tu panel de control, {name}.",
             "preparing": "Gráficos en preparación",
             "coming_soon": "Próximamente verás aquí tus estadísticas detalladas de visualizaciones y clics.",
             "stats": {
                 "total_prospects": "Prospectos Totales",
-                "active_courses": "Cursos Activos",
-                "assigned_codes": "Códigos Asignados",
+                "total_visits": "Visitas Totales",
+                "active_codes": "Códigos Activos",
                 "conversion_rate": "Tasa de Conversión"
             }
         },

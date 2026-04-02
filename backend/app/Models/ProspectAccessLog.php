@@ -12,6 +12,7 @@ class ProspectAccessLog extends Model
     protected $fillable = [
         'prospect_id',
         'access_code_id',
+        'session_id',
         'activated_at',
         'expired_at',
     ];
