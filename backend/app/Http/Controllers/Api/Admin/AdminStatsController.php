@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\AccessCode;
 use App\Models\ProspectAccessLog;
 use App\Models\ProspectNodeProgress;
+use App\Models\Course;
+use App\Models\CourseNode;
 use Illuminate\Support\Facades\DB;
 
 class AdminStatsController extends Controller
@@ -33,21 +35,48 @@ class AdminStatsController extends Controller
                 ->distinct('prospect_id')
                 ->count();
 
-            // All unique nodes that have been viewed using this code, across any course
-            $nodeViews = ProspectNodeProgress::where('access_code_id', $code->id)
-                ->select('course_node_id', DB::raw('COUNT(DISTINCT session_id) as unique_views'), DB::raw('MIN(viewed_at) as first_seen'))
-                ->with('node') // Ensure relations exist
-                ->groupBy('course_node_id')
-                ->orderBy('first_seen', 'asc') // This orders them by the logical sequence they were explored
-                ->get();
+            // All nodes in logical order starting from the course sequence
+            $courseSequence = collect([$code->course]);
+            $currentCourse = $code->course;
+            $visitedCourseIds = [$currentCourse->id];
+            
+            while ($currentCourse->next_course_id) {
+                if (in_array($currentCourse->next_course_id, $visitedCourseIds)) break;
+                
+                $nextCourse = Course::find($currentCourse->next_course_id);
+                if ($nextCourse) {
+                    $courseSequence->push($nextCourse);
+                    $visitedCourseIds[] = $nextCourse->id;
+                    $currentCourse = $nextCourse;
+                } else {
+                    break;
+                }
+            }
 
-            $nodesStats = $nodeViews->map(function($view) use ($totalVisits) {
+            $allNodes = collect();
+            foreach ($courseSequence as $course) {
+                $nodes = CourseNode::where('course_id', $course->id)
+                    ->orderBy('pos_x', 'asc')
+                    ->orderBy('pos_y', 'asc')
+                    ->get();
+                $allNodes = $allNodes->concat($nodes);
+            }
+
+            // Get views for all nodes at once
+            $viewCounts = ProspectNodeProgress::where('access_code_id', $code->id)
+                ->whereIn('course_node_id', $allNodes->pluck('id'))
+                ->select('course_node_id', DB::raw('COUNT(DISTINCT session_id) as unique_views'))
+                ->groupBy('course_node_id')
+                ->pluck('unique_views', 'course_node_id');
+
+            $nodesStats = $allNodes->map(function($node) use ($totalVisits, $viewCounts) {
+                $views = $viewCounts->get($node->id, 0);
                 return [
-                    'id' => $view->course_node_id,
-                    'title' => $view->node ? $view->node->title : 'Nodo Desconocido',
-                    'type' => $view->node ? $view->node->type : 'unknown',
-                    'views' => $view->unique_views,
-                    'dropoff' => $totalVisits > 0 ? round((1 - ($view->unique_views / $totalVisits)) * 100, 1) : 0
+                    'id' => $node->id,
+                    'title' => $node->title,
+                    'type' => $node->type,
+                    'views' => $views,
+                    'dropoff' => $totalVisits > 0 ? round((1 - ($views / $totalVisits)) * 100, 1) : 0
                 ];
             });
 

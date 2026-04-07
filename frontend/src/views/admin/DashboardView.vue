@@ -58,7 +58,7 @@ const globalStats = computed(() => {
         />
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div 
                 v-for="stat in globalStats" 
                 :key="stat.name"
@@ -98,17 +98,35 @@ const globalStats = computed(() => {
                     <!-- Accordion Header -->
                     <button 
                         @click="toggleCode(codeStat.id)"
-                        class="w-full flex items-center justify-between px-6 py-5 hover:bg-slate-50 transition-colors text-left"
+                        class="w-full flex items-center justify-between px-5 sm:px-8 py-5 hover:bg-slate-50/50 transition-all text-left group"
                     >
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2.5 py-1 rounded-md mb-1.5 w-fit">
+                        <div class="flex-1 min-w-0 pr-4">
+                            <span class="inline-flex px-2 py-0.5 rounded-md bg-indigo-50 text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-1">
                                 {{ codeStat.course.title }}
                             </span>
-                            <h3 class="text-lg font-black text-slate-800">Código: {{ codeStat.code }}</h3>
+                            <h3 class="text-xl font-black text-indigo-600 truncate">
+                                {{ codeStat.code }}
+                            </h3>
                         </div>
 
-                        <div class="flex items-center gap-4 ml-auto">
-                            <!-- Stats aligned to the right on desktop -->
+                        <div class="flex items-center gap-3 sm:gap-6 shrink-0">
+                            <!-- Mobile Stats Summary -->
+                            <div class="md:hidden flex gap-4 text-left sm:text-right mr-2">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-black text-slate-900 leading-tight">{{ codeStat.visits }}</span>
+                                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Visitas</span>
+                                </div>
+                                <div class="flex flex-col border-l border-slate-100 pl-4">
+                                    <span class="text-sm font-black text-emerald-600 leading-tight">{{ codeStat.registered }}</span>
+                                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Reg.</span>
+                                </div>
+                                <div class="flex flex-col border-l border-slate-100 pl-4">
+                                    <span class="text-sm font-black text-indigo-600 leading-tight">{{ codeStat.visits > 0 ? (codeStat.registered / codeStat.visits * 100).toFixed(0) : 0 }}%</span>
+                                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Cierre</span>
+                                </div>
+                            </div>
+
+                            <!-- Desktop Stats Summary -->
                             <div class="hidden md:flex gap-8 border-l border-slate-200 pl-8 mr-4">
                                 <div class="text-center">
                                     <div class="text-xl font-black text-slate-900">{{ codeStat.visits }}</div>
@@ -119,25 +137,24 @@ const globalStats = computed(() => {
                                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Registros</div>
                                 </div>
                                 <div class="text-center">
-                                    <div class="text-xl font-black text-indigo-600">{{ codeStat.visits > 0 ? (codeStat.registered / codeStat.visits * 100).toFixed(1) : 0 }}%</div>
+                                    <div class="text-xl font-black text-indigo-600 text-right">
+                                        {{ codeStat.visits > 0 ? (codeStat.registered / codeStat.visits * 100).toFixed(1) : 0 }}%
+                                    </div>
                                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Cierre</div>
                                 </div>
                             </div>
 
-                            <span class="md:hidden text-sm font-bold text-slate-400 mr-2">
-                                {{ codeStat.visits }} v. / {{ codeStat.registered }} r.
-                            </span>
-                            <svg 
+                            <!-- Accordion Arrow Icon -->
+                            <div 
                                 :class="[
-                                    'w-6 h-6 text-slate-400 transition-transform duration-300',
-                                    expandedCodes[codeStat.id] ? 'rotate-180' : ''
-                                ]" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
+                                    'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 bg-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-600',
+                                    expandedCodes[codeStat.id] ? 'rotate-180 bg-indigo-50 text-indigo-600' : 'text-slate-400'
+                                ]"
                             >
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-                            </svg>
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
                         </div>
                     </button>
 
@@ -157,9 +174,6 @@ const globalStats = computed(() => {
                                         class="h-full bg-indigo-500 transition-all duration-1000 ease-out"
                                         :style="{ width: `${codeStat.visits > 0 ? (node.views/codeStat.visits*100) : 0}%` }"
                                     ></div>
-                                </div>
-                                <div v-if="node.dropoff > 0" class="text-[10px] text-right text-rose-500 font-bold uppercase tracking-wide">
-                                    Abandono {{ node.dropoff }}%
                                 </div>
                             </div>
                         </div>

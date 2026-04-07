@@ -299,38 +299,40 @@ onMounted(() => {
 
 <template>
     <div class="h-screen flex flex-col">
-        <header class="bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10">
-            <div class="flex items-center gap-2 text-sm text-slate-600">
-                <span class="font-bold text-lg text-slate-800 mr-2">{{ $t('course.editor.title') }}</span>
-                <span class="text-slate-400"> </span>
-                <router-link to="/admin/cursos" class="text-lg font-bold hover:text-indigo-600 hover:underline">{{ $t('course.editor.breadcrumbs.courses') }}</router-link>
-                <span class="text-slate-400"> > </span>
-                <div v-if="isEditingTitle" class="flex items-center">
-                    <input 
-                        ref="titleInputRef"
-                        v-model="tempCourseTitle"
-                        type="text"
-                        class="px-2 py-1 border border-indigo-500 rounded outline-none font-medium text-slate-900 bg-indigo-50"
-                        @blur="saveTitle"
-                        @keyup.enter="saveTitle"
-                        @keyup.esc="isEditingTitle = false"
-                    />
+        <header class="bg-white border-b border-slate-200 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 z-10">
+            <div class="flex flex-wrap items-center gap-y-1 gap-x-2 text-slate-600">
+                <span class="font-bold text-base sm:text-lg text-slate-800">{{ $t('course.editor.title') }}</span>
+                <span class="text-slate-300 mx-1 hidden sm:inline">|</span>
+                <div class="flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    <router-link to="/admin/cursos" class="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">{{ $t('course.editor.breadcrumbs.courses') }}</router-link>
+                    <span class="text-slate-400"> > </span>
+                    <div v-if="isEditingTitle" class="flex items-center">
+                        <input 
+                            ref="titleInputRef"
+                            v-model="tempCourseTitle"
+                            type="text"
+                            class="px-2 py-0.5 border border-indigo-500 rounded outline-none font-medium text-slate-900 bg-indigo-50 max-w-[200px]"
+                            @blur="saveTitle"
+                            @keyup.enter="saveTitle"
+                            @keyup.esc="isEditingTitle = false"
+                        />
+                    </div>
+                    <span 
+                        v-else 
+                        class="font-medium text-slate-900 cursor-pointer hover:text-indigo-600 hover:bg-slate-100 px-2 py-0.5 rounded transition-colors flex items-center gap-2 group"
+                        @click="handleEditTitle"
+                    >
+                        {{ courseTitle }}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                        </svg>
+                    </span>
                 </div>
-                <span 
-                    v-else 
-                    class="font-medium text-slate-900 cursor-pointer hover:text-indigo-600 hover:bg-slate-100 px-2 py-1 rounded transition-colors flex items-center gap-2 group"
-                    @click="handleEditTitle"
-                >
-                    {{ courseTitle }}
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-                    </svg>
-                </span>
             </div>
-            <div class="flex gap-2">
+            <div class="w-full sm:w-auto">
                 <button 
                     @click="openNodeModal()" 
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold text-sm shadow-sm transition-all flex items-center gap-2"
+                    class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

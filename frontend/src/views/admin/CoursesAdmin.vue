@@ -176,7 +176,7 @@ onUnmounted(() => {
             </template>
         </AdminPageHeader>
         
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative min-h-[600px] h-[calc(100vh-16rem)]">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative min-h-[400px] h-[calc(100vh-16rem)]">
             <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>

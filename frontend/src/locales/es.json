@@ -306,7 +306,7 @@
         },
         "management": {
             "title": "Gestión de Cursos",
-            "new_course": "+ Nuevo Curso",
+            "new_course": "Nuevo Curso",
             "modal": {
                 "subtitle": "Ingresa el nombre del curso para comenzar a diseñar tu mapa.",
                 "create_button": "Crear Curso e Ir al Editor"
