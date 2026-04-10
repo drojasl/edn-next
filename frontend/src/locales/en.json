@@ -142,6 +142,7 @@
                 "code": "Code",
                 "course": "Course",
                 "expires": "Expires",
+                "actions": "Actions",
                 "no_codes": "No access codes found."
             },
             "usage_info": "Usage Information",
@@ -158,7 +159,9 @@
             "check_required": "Code is required",
             "check_available": "Code available",
             "check_taken": "This code is already in use",
-            "error_course_deleted": "Course deleted"
+            "error_course_deleted": "Course deleted",
+            "copied_code": "Code copied to clipboard",
+            "copied_link": "Link copied to clipboard"
         },
         "prospects": {
             "title": "Prospects",
@@ -208,7 +211,13 @@
         "update_success": "Profile updated successfully",
         "role": "Amway Entrepreneur",
         "amway_code": "Amway Code",
-        "slug_label": "Profile Slug"
+        "slug_label": "Profile Slug",
+        "abo_link_label": "Entrepreneur Registration Link",
+        "abo_link_placeholder": "Entrepreneur Registration Link",
+        "client_link_label": "Customer Registration Link",
+        "client_link_placeholder": "Customer Registration Link",
+        "my_digital_store_label": "My Digital Store",
+        "my_digital_store_placeholder": "Your Digital Store Link"
     },
     "common": {
         "language": "Language",

@@ -34,6 +34,9 @@ class Entrepreneur extends Authenticatable
         'is_active',
         'slug',
         'profile_picture',
+        'abo_link',
+        'client_link',
+        'my_digital_store',
     ];
 
     /**

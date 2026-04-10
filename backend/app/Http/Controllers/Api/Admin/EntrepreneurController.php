@@ -38,6 +38,9 @@ class EntrepreneurController extends Controller
             'codigo_amway' => 'required|string|max:20',
             'is_account_holder' => 'required|boolean',
             'slug' => 'required|string|max:255|unique:users',
+            'abo_link' => 'nullable|string|max:100',
+            'client_link' => 'nullable|string|max:100',
+            'my_digital_store' => 'nullable|string|max:100',
             'social_links' => 'nullable|array',
             'social_links.*.platform' => ['required', 'string', \Illuminate\Validation\Rule::in(\App\Enums\SocialPlatform::values())],
             'social_links.*.value' => ['required', 'string', function ($attribute, $value, $fail) {
@@ -75,6 +78,9 @@ class EntrepreneurController extends Controller
             'slug' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($entrepreneur->id)],
             'is_active' => 'required|boolean',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'abo_link' => 'nullable|string|max:100',
+            'client_link' => 'nullable|string|max:100',
+            'my_digital_store' => 'nullable|string|max:100',
             'social_links' => 'nullable|array',
             'social_links.*.platform' => ['required', 'string', \Illuminate\Validation\Rule::in(\App\Enums\SocialPlatform::values())],
             'social_links.*.value' => ['required', 'string', function ($attribute, $value, $fail) {

@@ -17,7 +17,7 @@ const errorMessage = ref('')
 // Validation errors
 const errors = ref({
   codigoAmway: '',
-  password: ''
+  password: '',
 })
 
 // Language switcher
@@ -32,7 +32,7 @@ const switchLanguage = (lang: string) => {
 const validateForm = (): boolean => {
   errors.value = {
     codigoAmway: '',
-    password: ''
+    password: '',
   }
 
   let isValid = true
@@ -67,7 +67,7 @@ const handleLogin = async () => {
     await authStore.login({
       amway_code: codigoAmway.value.trim(),
       is_account_holder: isTitular.value,
-      password: password.value
+      password: password.value,
     })
   } catch (error: any) {
     console.error('Login error:', error)
@@ -83,30 +83,32 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4"
+  >
     <div class="w-full max-w-md">
       <!-- Language Switcher -->
       <div class="flex justify-end mb-4">
         <div class="inline-flex rounded-lg border border-gray-300 bg-white p-1">
           <button
-            @click="switchLanguage('es')"
             :class="[
               'px-4 py-2 text-sm font-medium rounded-md transition-colors',
               currentLanguage === 'es'
                 ? 'bg-indigo-600 text-white'
-                : 'text-gray-700 hover:bg-gray-100'
+                : 'text-gray-700 hover:bg-gray-100',
             ]"
+            @click="switchLanguage('es')"
           >
             ES
           </button>
           <button
-            @click="switchLanguage('en')"
             :class="[
               'px-4 py-2 text-sm font-medium rounded-md transition-colors',
               currentLanguage === 'en'
                 ? 'bg-indigo-600 text-white'
-                : 'text-gray-700 hover:bg-gray-100'
+                : 'text-gray-700 hover:bg-gray-100',
             ]"
+            @click="switchLanguage('en')"
           >
             EN
           </button>
@@ -129,10 +131,13 @@ const handleLogin = async () => {
           {{ errorMessage }}
         </div>
 
-        <form @submit.prevent="handleLogin" class="space-y-6">
+        <form class="space-y-6" @submit.prevent="handleLogin">
           <!-- Código Amway -->
           <div>
-            <label for="codigoAmway" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="codigoAmway"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
               {{ t('auth.login.amwayCode') }}
             </label>
             <input
@@ -158,14 +163,20 @@ const handleLogin = async () => {
               class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
               :disabled="loading"
             />
-            <label for="isTitular" class="ml-3 text-sm font-medium text-gray-700">
+            <label
+              for="isTitular"
+              class="ml-3 text-sm font-medium text-gray-700"
+            >
               {{ t('auth.login.isTitular') }}
             </label>
           </div>
 
           <!-- Password -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              for="password"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
               {{ t('auth.login.password') }}
             </label>
             <input
@@ -189,7 +200,7 @@ const handleLogin = async () => {
             :extra-props="{
               loading: loading,
               loadingText: t('auth.login.loading'),
-              type: 'submit'
+              type: 'submit',
             }"
           />
         </form>

@@ -39,7 +39,7 @@
             "name": "Nombre",
             "last_name": "Apellido",
             "email": "Correo Electrónico",
-            "slug": "Slug del Perfil (ej: diego-perez)",
+            "slug": "Slug del Perfil (ej: juan-perez)",
             "is_active": "Cuenta Activa",
             "submit": "Crear Empresario",
             "update": "Actualizar Empresario",
@@ -143,6 +143,7 @@
                 "code": "Código",
                 "course": "Curso",
                 "expires": "Expira",
+                "actions": "Acciones",
                 "no_codes": "No se encontraron códigos de acceso."
             },
             "usage_info": "Información de Uso",
@@ -159,7 +160,9 @@
             "check_required": "El código es requerido",
             "check_available": "Código disponible",
             "check_taken": "Este código ya está en uso",
-            "error_course_deleted": "Curso eliminado"
+            "error_course_deleted": "Curso eliminado",
+            "copied_code": "Código copiado al portapapeles",
+            "copied_link": "Enlace copiado al portapapeles"
         },
         "prospects": {
             "title": "Prospectos",
@@ -209,7 +212,13 @@
         "update_success": "Perfil actualizado correctamente",
         "role": "Empresario Amway",
         "amway_code": "Código Amway",
-        "slug_label": "Slug del Perfil"
+        "slug_label": "Slug del Perfil",
+        "abo_link_label": "Link de Registro Empresario",
+        "abo_link_placeholder": "Link de Registro Empresario",
+        "client_link_label": "Link de Registro Cliente",
+        "client_link_placeholder": "Link de Registro Cliente",
+        "my_digital_store_label": "Mi Tienda Digital",
+        "my_digital_store_placeholder": "Link de tu Tienda Digital"
     },
     "common": {
         "language": "Idioma",

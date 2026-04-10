@@ -1,38 +1,38 @@
 export interface FlowPosition {
-    x: number
-    y: number
+  x: number
+  y: number
 }
 
 export interface CourseNodeOption {
-    label: string
-    next_node_id: number | null
+  label: string
+  next_node_id: number | null
 }
 
 export interface CourseNodeData {
-    id: number
-    course_id: number
-    title: string
-    type: 'video' | 'form' | 'menu' | 'info' | 'action'
-    content: any
-    video_url?: string
-    meeting_link?: string
-    show_description: boolean
-    pos_x: number
-    pos_y: number
-    is_start: boolean
-    is_end: boolean
-    options: CourseNodeOption[]
-    slug: string
+  id: number
+  course_id: number
+  title: string
+  type: 'video' | 'form' | 'menu' | 'info' | 'action'
+  content: any
+  video_url?: string
+  meeting_link?: string
+  show_description: boolean
+  pos_x: number
+  pos_y: number
+  is_start: boolean
+  is_end: boolean
+  options: CourseNodeOption[]
+  slug: string
 }
 
 export interface FlowNodeChange {
-    id: number
-    pos_x: number
-    pos_y: number
+  id: number
+  pos_x: number
+  pos_y: number
 }
 
 export interface CourseConnectionUpdate {
-    id: number
-    next_course_id: number | null
-    next_course_label: string | null
+  id: number
+  next_course_id: number | null
+  next_course_label: string | null
 }
