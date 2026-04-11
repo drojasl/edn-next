@@ -3,29 +3,7 @@ import axios, {
   type AxiosRequestConfig,
   AxiosError,
 } from 'axios'
-
-/**
- * Interface for the API response
- */
-export interface ApiResponse<T = any> {
-  success: boolean
-  data: T | null
-  error: {
-    message: string
-    code?: string | number
-    details?: any
-  } | null
-}
-
-/**
- * Interface for request parameters
- */
-interface RequestParams {
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-  url: string
-  body?: any
-  headers?: Record<string, string>
-}
+import type { ApiResponse, RequestParams, ApiError } from '../types/types'
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -75,7 +53,7 @@ apiClient.interceptors.response.use(
 /**
  * Centralized request function
  */
-export const apiRequest = async <T = any>({
+export const apiRequest = async <T = unknown>({
   method,
   url,
   body,
@@ -96,8 +74,8 @@ export const apiRequest = async <T = any>({
       data: response.data,
       error: null,
     }
-  } catch (error: any) {
-    const axiosError = error as AxiosError<any>
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ApiError>
 
     return {
       success: false,

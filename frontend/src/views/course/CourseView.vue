@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { ref, reactive, watch, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { apiRequest } from '../../api/apiClient'
+import {
+  type CourseNodeData,
+  type Course,
+  type ApiError,
+  type CourseNodeField,
+} from '../../types/types'
 import BaseButton from '../../components/common/BaseButton.vue'
 
 interface Props {
-  node: any
-  course: any
+  node?: CourseNodeData
+  course?: Course & {
+    nodes?: CourseNodeData[]
+    next_course?: { slug: string; id: number }
+  }
 }
 
 const props = defineProps<Props>()
@@ -14,7 +23,7 @@ const router = useRouter()
 const route = useRoute()
 const loading = ref(false)
 const formSubmitting = ref(false)
-const formData = reactive<Record<string, any>>({})
+const formData = reactive<Record<string, string | boolean>>({})
 
 // Initialize formData when node changes
 watch(
@@ -28,7 +37,7 @@ watch(
       // Clear previous data
       Object.keys(formData).forEach((key) => delete formData[key])
       // Initialize defaults if any
-      newNode.content?.fields?.forEach((field: any) => {
+      newNode.content?.fields?.forEach((field: CourseNodeField) => {
         formData[field.name] = field.type === 'checkbox' ? false : ''
       })
     }
@@ -38,7 +47,7 @@ watch(
 const isFormValid = computed(() => {
   if (props.node?.type !== 'form') return true
 
-  const fields: any[] = props.node.content?.fields || []
+  const fields: CourseNodeField[] = props.node.content?.fields || []
 
   for (const field of fields) {
     const val = formData[field.name]
@@ -111,7 +120,9 @@ const isFormValid = computed(() => {
   return true
 })
 
-const syncProgressWithBackend = async (data: Record<string, any>) => {
+const syncProgressWithBackend = async (
+  data: Record<string, string | boolean>
+) => {
   // 1. Recopilar progreso de localStorage
   const progress: Record<string, number> = {}
   const historyRaw = localStorage.getItem('course_history')
@@ -146,7 +157,7 @@ const syncProgressWithBackend = async (data: Record<string, any>) => {
   }
 
   // 2. Build a clean prospect payload (known prospect fields only)
-  const prospectPayload: Record<string, any> = {
+  const prospectPayload: Record<string, unknown> = {
     code,
     progress, // always send as object, even if empty {}
     completed,
@@ -225,8 +236,9 @@ const handleFormSubmit = async () => {
     const emailKey = Object.keys(formData).find(
       (key) =>
         key.toLowerCase().includes('email') ||
-        props.node.content?.fields?.find((f: any) => f.name === key)?.type ===
-          'email'
+        props.node?.content?.fields?.find(
+          (f: CourseNodeField) => f.name === key
+        )?.type === 'email'
     )
 
     if (emailKey && formData[emailKey]) {
@@ -235,13 +247,17 @@ const handleFormSubmit = async () => {
         throw new Error(response.error?.message || 'Error saving data')
       }
       // Guardar también en localStorage local para referencia
-      localStorage.setItem('prospect_email', formData[emailKey])
+      localStorage.setItem('prospect_email', String(formData[emailKey]))
     }
 
     handleContinue() // Continuar al siguiente nodo después de enviar
-  } catch (error: any) {
-    console.error('Error in form submission:', error)
-    alert('Hubo un error al guardar tus datos. Por favor, inténtalo de nuevo.')
+  } catch (error: unknown) {
+    const err = error as ApiError
+    console.error('Error in form submission:', err)
+    alert(
+      err.message ||
+        'Hubo un error al guardar tus datos. Por favor, inténtalo de nuevo.'
+    )
   } finally {
     formSubmitting.value = false
   }
@@ -257,8 +273,9 @@ const handleNavigate = (nextNodeId: number | null) => {
   const entrepreneurSlug = route.params.entrepreneurSlug as string
   const courseSlug = route.params.courseSlug as string
 
-  // Find the slug of the next node in the course nodes
-  const nextNode = props.course?.nodes?.find((n: any) => n.id === nextNodeId)
+  const nextNode = props.course?.nodes?.find(
+    (n: CourseNodeData) => n.id === nextNodeId
+  )
 
   if (nextNode) {
     router.push(`/cursos/${entrepreneurSlug}/${courseSlug}/${nextNode.slug}`)
@@ -268,6 +285,17 @@ const handleNavigate = (nextNodeId: number | null) => {
 
   loading.value = false
 }
+
+const menuGridClasses = computed(() => {
+  const count = props.node?.options?.length || 0
+  if (count === 0) return ''
+
+  const base = Math.min(count, 2)
+  const md = Math.min(count, 3)
+  const lg = Math.min(count, 4)
+
+  return `grid-cols-${base} md:grid-cols-${md} lg:grid-cols-${lg}`
+})
 
 const handleContinue = () => {
   if (props.node?.is_end) {
@@ -364,7 +392,7 @@ const handleVideoLoad = (event: Event) => {
   <div
     v-else
     :class="[
-      'flex flex-col bg-white animate-fade-in',
+      'flex flex-col bg-white animate-fade-in flex-1',
       node.type === 'menu' && !node.video_url ? '' : 'h-full',
     ]"
   >
@@ -390,9 +418,9 @@ const handleVideoLoad = (event: Event) => {
     >
       <div class="aspect-video bg-slate-900 shadow-inner">
         <iframe
-          v-if="getYoutubeId(node.video_url)"
+          v-if="getYoutubeId(node.video_url || '')"
           class="w-full h-full"
-          :src="`https://www.youtube.com/embed/${getYoutubeId(node.video_url)}?rel=0&modestbranding=1&enablejsapi=1`"
+          :src="`https://www.youtube.com/embed/${getYoutubeId(node.video_url || '')}?rel=0&modestbranding=1&enablejsapi=1`"
           frameborder="0"
           allow="
             accelerometer;
@@ -543,7 +571,7 @@ const handleVideoLoad = (event: Event) => {
               <!-- Checkboxes (Terms, etc) -->
               <div
                 v-for="field in node.content?.fields?.filter(
-                  (f: any) => f.type === 'checkbox'
+                  (f: CourseNodeField) => f.type === 'checkbox'
                 )"
                 :key="field.name"
                 class="flex items-center gap-3 mb-6"
@@ -614,18 +642,20 @@ const handleVideoLoad = (event: Event) => {
       <p class="text-slate-500">{{ node.title }}</p>
     </div>
 
-    <!-- Footer Action -->
     <div
       v-if="node.type !== 'form'"
-      class="p-4 md:p-8 border-t border-slate-100 flex flex-col items-center gap-4"
+      :class="[
+        'p-4 md:p-8 flex flex-col items-center gap-4',
+        node.type === 'menu' && !node.video_url
+          ? 'flex-1 justify-center'
+          : 'border-t border-slate-100',
+      ]"
     >
       <div
         v-if="!node.is_end && node.options?.length > 0"
         :class="[
-          'w-full gap-4',
-          node.type === 'menu'
-            ? 'max-w-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-            : 'max-w-sm flex flex-col',
+          'w-full max-w-6xl grid gap-3 md:gap-4',
+          node.type === 'menu' ? menuGridClasses : 'max-w-sm flex flex-col',
         ]"
       >
         <BaseButton
@@ -639,7 +669,7 @@ const handleVideoLoad = (event: Event) => {
               : option.label) || $t('course.continue')
           "
           :action="() => handleNavigate(option.next_node_id)"
-          class="shadow-lg h-full"
+          class="shadow-lg h-full w-full"
           :extra-props="{ loading: loading }"
         />
       </div>
@@ -652,7 +682,7 @@ const handleVideoLoad = (event: Event) => {
         <BaseButton
           :text="
             node.is_end
-              ? course.next_course_label || $t('course.next_course_default')
+              ? course?.next_course_label || $t('course.next_course_default')
               : $t('course.continue')
           "
           :action="handleContinue"

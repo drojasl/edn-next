@@ -4,6 +4,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useI18n } from 'vue-i18n'
 import EntrepreneurForm from '../../components/admin/user/EntrepreneurForm.vue'
 import { apiRequest } from '../../api/apiClient'
+import { type User } from '../../types/types'
 import AppToast from '../../components/common/AppToast.vue'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 
@@ -45,7 +46,7 @@ const triggerFileUpload = () => {
   fileInput.value?.click()
 }
 
-const handleUpdateProfile = async (formData: any) => {
+const handleUpdateProfile = async (formData: User) => {
   if (!authStore.user?.id) return
 
   loading.value = true
@@ -65,43 +66,50 @@ const handleUpdateProfile = async (formData: any) => {
       'my_digital_store',
       'social_links',
     ]
-    const cleanData: any = {}
+    const cleanData: Record<string, unknown> = {}
     allowedFields.forEach((field) => {
-      if (formData[field] !== undefined) {
-        cleanData[field] = formData[field]
+      if (
+        (formData as unknown as Record<string, unknown>)[field] !== undefined
+      ) {
+        cleanData[field] = (formData as unknown as Record<string, unknown>)[
+          field
+        ]
       }
     })
 
-    let payload: any = cleanData
+    let payload: unknown = cleanData
     let method: 'POST' | 'PUT' = 'PUT'
-    let headers: any = undefined
+    let headers: Record<string, string> | undefined = undefined
 
     if (profilePictureFile.value) {
       method = 'POST'
-      payload = new FormData()
+      const fd = new FormData()
+      payload = fd
       Object.keys(cleanData).forEach((key) => {
         if (cleanData[key] !== null && cleanData[key] !== undefined) {
           if (typeof cleanData[key] === 'boolean') {
-            payload.append(key, cleanData[key] ? '1' : '0')
+            fd.append(key, cleanData[key] ? '1' : '0')
           } else if (Array.isArray(cleanData[key])) {
-            cleanData[key].forEach((item: any, index: number) => {
-              if (typeof item === 'object') {
-                Object.keys(item).forEach((subKey) => {
-                  payload.append(`${key}[${index}][${subKey}]`, item[subKey])
+            const arr = cleanData[key] as unknown[]
+            arr.forEach((item: unknown, index: number) => {
+              if (item && typeof item === 'object') {
+                const obj = item as Record<string, unknown>
+                Object.keys(obj).forEach((subKey) => {
+                  fd.append(`${key}[${index}][${subKey}]`, String(obj[subKey]))
                 })
               } else {
-                payload.append(`${key}[]`, item)
+                fd.append(`${key}[]`, String(item))
               }
             })
           } else {
-            payload.append(key, cleanData[key])
+            fd.append(key, String(cleanData[key]))
           }
         }
       })
       const rawFile = toRaw(profilePictureFile.value)
-      payload.append('profile_picture', rawFile)
-      payload.append('_method', 'PUT')
-      headers = { 'Content-Type': 'multipart/form-data' } // Need explicitly here to overcome default application/json
+      fd.append('profile_picture', rawFile)
+      fd.append('_method', 'PUT')
+      headers = { 'Content-Type': 'multipart/form-data' }
     }
 
     const response = await apiRequest({
@@ -123,8 +131,9 @@ const handleUpdateProfile = async (formData: any) => {
         'error'
       )
     }
-  } catch (error: any) {
-    toastRef.value?.show(error.message || t('common.error'), 'error')
+  } catch (error: unknown) {
+    const err = error as Error
+    toastRef.value?.show(err.message || t('common.error'), 'error')
   } finally {
     loading.value = false
   }

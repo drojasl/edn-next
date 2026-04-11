@@ -1,19 +1,12 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { Node, Edge } from '@vue-flow/core'
 import BaseFlowEditor from './flow/BaseFlowEditor.vue'
 import { EDITOR_CONFIG } from '../../config/constants'
+import { type Course } from '../../types/types'
 
 const { t } = useI18n()
-
-interface Course {
-  id: number
-  title: string
-  next_course_id: number | null
-  next_course_label: string | null
-  pos_x: number
-  pos_y: number
-}
 
 const props = defineProps<{
   courses: Course[]
@@ -22,8 +15,8 @@ const props = defineProps<{
 
 const emit = defineEmits(['save', 'position-change', 'action'])
 
-const initialNodes = ref<any[]>([])
-const initialEdges = ref<any[]>([])
+const initialNodes = ref<Node[]>([])
+const initialEdges = ref<Edge[]>([])
 
 // Define extent from config
 const nodeExtent = [
@@ -72,7 +65,7 @@ const handleNodeChange = (data: {
 }
 
 // Handle bulk save (connections)
-const handleSave = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
+const handleSave = ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
   // Transform edges back to "next_course_id" map
   const nextCourseMap = new Map<
     number,
@@ -85,7 +78,8 @@ const handleSave = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
     nextCourseMap.set(sourceId, {
       next_course_id: targetId,
       next_course_label:
-        edge.label || t('course.editor.default_connection_label'),
+        (typeof edge.label === 'string' ? edge.label : null) ||
+        t('course.editor.default_connection_label'),
     })
   })
 

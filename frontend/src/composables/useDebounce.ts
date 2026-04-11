@@ -1,12 +1,10 @@
 export function useDebounce(delay: number = 1000) {
   const createDebouncer = <T>(apiCall: (items: T[]) => Promise<void>) => {
     let buffer: T[] = []
-    let timeout: any = null
+    let timeout: ReturnType<typeof setTimeout> | null = null
 
     return (item: T, uniqueKey: keyof T) => {
-      const index = buffer.findIndex(
-        (b: any) => b[uniqueKey] === (item as any)[uniqueKey]
-      )
+      const index = buffer.findIndex((b: T) => b[uniqueKey] === item[uniqueKey])
       if (index !== -1) buffer[index] = item
       else buffer.push(item)
 
@@ -21,7 +19,7 @@ export function useDebounce(delay: number = 1000) {
 
   const createStateDebouncer = <T>(apiCall: (state: T) => Promise<void>) => {
     let latestState: T | null = null
-    let timeout: any = null
+    let timeout: ReturnType<typeof setTimeout> | null = null
 
     return (state: T) => {
       latestState = state

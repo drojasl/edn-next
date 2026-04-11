@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import BaseButton from '../../components/common/BaseButton.vue'
+import type { ApiError } from '../../types/types'
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
@@ -69,12 +70,13 @@ const handleLogin = async () => {
       is_account_holder: isTitular.value,
       password: password.value,
     })
-  } catch (error: any) {
-    console.error('Login error:', error)
-    if (error.code === 401) {
+  } catch (error: unknown) {
+    const err = error as ApiError & { code?: number }
+    console.error('Login error:', err)
+    if (err.code === 401) {
       errorMessage.value = t('auth.errors.invalidCredentials')
     } else {
-      errorMessage.value = error.message || t('auth.errors.serverError')
+      errorMessage.value = err.message || t('auth.errors.serverError')
     }
   } finally {
     loading.value = false

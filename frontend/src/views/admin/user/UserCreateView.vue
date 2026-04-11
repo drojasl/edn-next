@@ -6,13 +6,15 @@ import { apiRequest } from '../../../api/apiClient'
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.vue'
 import EntrepreneurForm from '../../../components/admin/user/EntrepreneurForm.vue'
 
+import { type User, type ApiError } from '../../../types/types'
+
 const { t } = useI18n()
 const router = useRouter()
 
 const loading = ref(false)
 const errorMessage = ref('')
 
-const handleCreate = async (formData: any) => {
+const handleCreate = async (formData: User) => {
   loading.value = true
   errorMessage.value = ''
 
@@ -28,9 +30,10 @@ const handleCreate = async (formData: any) => {
     } else {
       errorMessage.value = result.error?.message || t('common.error')
     }
-  } catch (error: any) {
-    console.error('Creation error:', error)
-    errorMessage.value = error.message
+  } catch (error: unknown) {
+    const err = error as ApiError
+    console.error('Creation error:', err)
+    errorMessage.value = err.message
   } finally {
     loading.value = false
   }

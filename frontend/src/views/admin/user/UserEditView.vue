@@ -6,6 +6,8 @@ import { apiRequest } from '../../../api/apiClient'
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.vue'
 import EntrepreneurForm from '../../../components/admin/user/EntrepreneurForm.vue'
 
+import { type User, type ApiError } from '../../../types/types'
+
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
@@ -13,30 +15,31 @@ const route = useRoute()
 const userId = route.params.id
 const loading = ref(false)
 const fetching = ref(true)
-const entrepreneur = ref<any>(null)
+const entrepreneur = ref<User | null>(null)
 const errorMessage = ref('')
 
 const fetchEntrepreneur = async () => {
   fetching.value = true
   try {
-    const result = await apiRequest({
+    const result = await apiRequest<User>({
       method: 'GET',
       url: `/v1/admin/entrepreneurs/${userId}`,
     })
 
-    if (result.success) {
+    if (result.success && result.data) {
       entrepreneur.value = result.data
     } else {
       errorMessage.value = result.error?.message || t('common.error')
     }
-  } catch (error: any) {
-    errorMessage.value = error.message || t('common.error')
+  } catch (error: unknown) {
+    const err = error as ApiError
+    errorMessage.value = err.message || t('common.error')
   } finally {
     fetching.value = false
   }
 }
 
-const handleUpdate = async (formData: any) => {
+const handleUpdate = async (formData: User) => {
   loading.value = true
   errorMessage.value = ''
 
@@ -52,9 +55,10 @@ const handleUpdate = async (formData: any) => {
     } else {
       errorMessage.value = result.error?.message || t('common.error')
     }
-  } catch (error: any) {
-    console.error('Update error:', error)
-    errorMessage.value = error.message || t('common.error')
+  } catch (error: unknown) {
+    const err = error as ApiError
+    console.error('Update error:', err)
+    errorMessage.value = err.message || t('common.error')
   } finally {
     loading.value = false
   }
@@ -128,7 +132,7 @@ onMounted(fetchEntrepreneur)
     >
       <EntrepreneurForm
         mode="edit"
-        :initial-data="entrepreneur"
+        :initial-data="entrepreneur || undefined"
         :loading="loading"
         @submit="handleUpdate"
         @cancel="router.push('/admin/users')"

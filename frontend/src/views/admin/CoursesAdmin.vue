@@ -9,19 +9,13 @@ import { useDebounce } from '../../composables/useDebounce'
 import AppToast from '../../components/common/AppToast.vue'
 import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 import CourseFlowEditor from '../../components/admin/CourseFlowEditor.vue'
-import type {
-  FlowNodeChange,
-  CourseConnectionUpdate,
-} from '../../types/CourseFlow'
-
-interface Course {
-  id: number
-  title: string
-  next_course_id: number | null
-  next_course_label: string | null
-  pos_x: number
-  pos_y: number
-}
+import {
+  type FlowNodeChange,
+  type CourseConnectionUpdate,
+  type Course,
+  type ApiError,
+} from '../../types/types'
+import type { ModalConfig } from '../../components/common/ConfirmationModal.vue'
 
 const courses = ref<Course[]>([])
 const loading = ref(true)
@@ -37,7 +31,7 @@ const showToast = (message: string, type: 'success' | 'error' = 'error') => {
   toastRef.value?.show(message, type)
 }
 
-const openModal = (config: any) => {
+const openModal = (config: ModalConfig) => {
   modalRef.value?.open(config)
 }
 
@@ -50,7 +44,7 @@ const handleCreateCourse = async (data: {
   description: string
 }) => {
   isSaving.value = true
-  const response = await apiRequest({
+  const response = await apiRequest<{ data: { id: number } }>({
     method: 'POST',
     url: '/v1/admin/courses',
     body: data,
@@ -69,7 +63,7 @@ const { createDebouncer, createStateDebouncer } = useDebounce(1000)
 
 const fetchCourses = async () => {
   loading.value = true
-  const response = await apiRequest({
+  const response = await apiRequest<{ data: Course[] }>({
     method: 'GET',
     url: '/v1/admin/courses',
   })
@@ -85,14 +79,14 @@ const handleAction = async ({ type, id }: { type: string; id: string }) => {
     router.push(`/admin/cursos/${id}/edit`)
   } else if (type === 'delete') {
     const courseId = parseInt(id)
-    const course = courses.value.find((c: any) => c.id === courseId)
+    const course = courses.value.find((c: Course) => c.id === courseId)
 
     // 1. Check outgoing connection (the course has a next_course_id)
     const hasOutgoing = course && course.next_course_id !== null
 
     // 2. Check incoming connection (any other course has this course as next_course_id)
     const hasIncoming = courses.value.some(
-      (c: any) => c.next_course_id === courseId
+      (c: Course) => c.next_course_id === courseId
     )
 
     if (hasOutgoing || hasIncoming) {
@@ -107,17 +101,23 @@ const handleAction = async ({ type, id }: { type: string; id: string }) => {
       confirmText: t('course.management.delete'),
       onConfirm: async () => {
         isSaving.value = true
-        const response = await apiRequest({
-          method: 'DELETE',
-          url: `/v1/admin/courses/${id}`,
-        })
-        if (response.success) {
-          showToast(t('course.management.delete_success'), 'success')
-          await fetchCourses()
-        } else {
-          showToast(response.error?.message || t('common.error'), 'error')
+        try {
+          const response = await apiRequest({
+            method: 'DELETE',
+            url: `/v1/admin/courses/${id}`,
+          })
+          if (response.success) {
+            showToast(t('course.management.delete_success'), 'success')
+            await fetchCourses()
+          } else {
+            showToast(response.error?.message || t('common.error'), 'error')
+          }
+        } catch (error: unknown) {
+          const err = error as ApiError
+          showToast(err.message || t('common.error'), 'error')
+        } finally {
+          isSaving.value = false
         }
-        isSaving.value = false
       },
     })
   }

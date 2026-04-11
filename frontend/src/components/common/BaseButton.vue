@@ -3,7 +3,13 @@ interface Props {
   text: string
   variant?: 'primary'
   action?: () => void
-  extraProps?: Record<string, any>
+  extraProps?: {
+    type?: 'button' | 'submit' | 'reset'
+    disabled?: boolean
+    loading?: boolean
+    loadingText?: string
+    [key: string]: unknown
+  }
 }
 
 const props = withDefaults(defineProps<Props>(), {

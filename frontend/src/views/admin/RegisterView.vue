@@ -4,13 +4,15 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import EntrepreneurForm from '../../components/admin/user/EntrepreneurForm.vue'
 
+import { type User, type ApiError } from '../../types/types'
+
 const { t } = useI18n()
 const authStore = useAuthStore()
 
 const loading = ref(false)
 const errorMessage = ref('')
 
-const handleRegister = async (formData: any) => {
+const handleRegister = async (formData: User) => {
   loading.value = true
   errorMessage.value = ''
 
@@ -18,14 +20,15 @@ const handleRegister = async (formData: any) => {
     // Map form data to what backend expects if necessary
     const userData = {
       ...formData,
-      amway_code: formData.codigo_amway, // Ensure compatibility
+      codigo_amway: formData.codigo_amway, // Maintain consistency with User interface
     }
 
     await authStore.register(userData)
     // Auth store handles redirect on success
-  } catch (error: any) {
-    console.error('Registration error:', error)
-    errorMessage.value = error.message || t('auth.errors.serverError')
+  } catch (error: unknown) {
+    const err = error as ApiError
+    console.error('Registration error:', err)
+    errorMessage.value = err.message || t('auth.errors.serverError')
   } finally {
     loading.value = false
   }

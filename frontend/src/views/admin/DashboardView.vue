@@ -5,9 +5,26 @@ import { useAuthStore } from '../../stores/auth'
 import { apiRequest } from '../../api/apiClient'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 
+import { type Course } from '../../types/types'
+
+interface FunnelNode {
+  id: number
+  title: string
+  views: number
+}
+
+interface FunnelStat {
+  id: number
+  code: string
+  visits: number
+  registered: number
+  course: Course
+  funnel: FunnelNode[]
+}
+
 const { t } = useI18n()
 const authStore = useAuthStore()
-const funnelData = ref<any[]>([])
+const funnelData = ref<FunnelStat[]>([])
 const loading = ref(true)
 const expandedCodes = ref<Record<number, boolean>>({})
 
@@ -19,11 +36,11 @@ const userName = computed(() => authStore.user?.name || '')
 
 const fetchStats = async () => {
   loading.value = true
-  const response = await apiRequest({
+  const response = await apiRequest<FunnelStat[]>({
     method: 'GET',
     url: '/v1/admin/stats/funnel',
   })
-  if (response.success) {
+  if (response.success && response.data) {
     funnelData.value = response.data
   }
   loading.value = false

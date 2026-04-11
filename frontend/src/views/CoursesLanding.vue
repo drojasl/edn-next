@@ -40,7 +40,10 @@ const handleSubmit = async () => {
   })
 
   if (result.success && result.data) {
-    const { entrepreneurSlug, courseSlug } = result.data
+    const { entrepreneurSlug, courseSlug } = result.data as {
+      entrepreneurSlug: string
+      courseSlug: string
+    }
 
     // Guardar información de acceso para validación posterior
     localStorage.setItem(

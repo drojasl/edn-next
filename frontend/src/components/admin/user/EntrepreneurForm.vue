@@ -4,9 +4,11 @@ import { useI18n } from 'vue-i18n'
 import BaseButton from '../../common/BaseButton.vue'
 import { apiRequest } from '../../../api/apiClient'
 
+import { type User, type SocialLink } from '../../../types/types'
+
 const props = defineProps<{
   mode: 'register' | 'create' | 'edit'
-  initialData?: any
+  initialData?: User
   loading?: boolean
   isProfile?: boolean
 }>()
@@ -17,7 +19,7 @@ const { t } = useI18n()
 
 // Form state
 const form = ref({
-  id: null,
+  id: null as number | null,
   name: '',
   last_name: '',
   email: '',
@@ -30,7 +32,7 @@ const form = ref({
   abo_link: '',
   client_link: '',
   my_digital_store: '',
-  social_links: [] as any[],
+  social_links: [] as SocialLink[],
 })
 
 const errors = ref<Record<string, string>>({})
@@ -174,7 +176,7 @@ const checkSlug = async () => {
 
   slugAvailability.value.checking = true
   try {
-    const result = await apiRequest({
+    const result = await apiRequest<{ available: boolean }>({
       method: 'POST',
       url: '/auth/validate-slug',
       body: {
@@ -183,7 +185,7 @@ const checkSlug = async () => {
       },
     })
 
-    if (result.success) {
+    if (result.success && result.data) {
       slugAvailability.value.available = result.data.available
       slugAvailability.value.message = result.data.available
         ? t('admin.users.slug_available')
@@ -197,7 +199,7 @@ const checkSlug = async () => {
 }
 
 // Watch slug changes and check availability (debounced)
-let slugTimeout: any = null
+let slugTimeout: number | null = null
 watch(
   () => form.value.slug,
   () => {

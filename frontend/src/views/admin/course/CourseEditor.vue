@@ -8,17 +8,25 @@ import { EDITOR_CONFIG } from '../../../config/constants'
 import AppToast from '../../../components/common/AppToast.vue'
 import ConfirmationModal from '../../../components/common/ConfirmationModal.vue'
 import { useDebounce } from '../../../composables/useDebounce'
-import NodeEditorModal, {
+import NodeEditorModal from '../../../components/admin/course/NodeEditorModal.vue'
+import {
+  type FlowNodeChange,
+  type CourseNodeData,
+  type FlowNode,
+  type FlowEdge,
   type NodeData,
-} from '../../../components/admin/course/NodeEditorModal.vue'
-import type { FlowNodeChange } from '../../../types/CourseFlow'
+} from '../../../types/types'
 import type { ModalConfig } from '../../../components/common/ConfirmationModal.vue'
+
+interface SyncNodeData extends CourseNodeData {
+  id: number
+}
 
 const route = useRoute()
 const courseId = route.params.id
 
-const initialNodes = ref<any[]>([])
-const initialEdges = ref<any[]>([])
+const initialNodes = ref<FlowNode[]>([])
+const initialEdges = ref<FlowEdge[]>([])
 const loading = ref(true)
 const courseTitle = ref('')
 const isSaving = ref(false)
@@ -35,7 +43,10 @@ const nodeExtent = [
 
 const fetchNodes = async () => {
   loading.value = true
-  const response = await apiRequest({
+  const response = await apiRequest<{
+    data: CourseNodeData[]
+    course: { title: string }
+  }>({
     method: 'GET',
     url: `/v1/admin/courses/${courseId}/nodes`,
   })
@@ -47,7 +58,7 @@ const fetchNodes = async () => {
     }
 
     // Transform Nodes
-    initialNodes.value = nodes.map((node: any) => ({
+    initialNodes.value = nodes.map((node: CourseNodeData) => ({
       id: node.id.toString(),
       type: 'custom',
       position: { x: node.pos_x || 0, y: node.pos_y || 0 },
@@ -59,14 +70,13 @@ const fetchNodes = async () => {
       },
     }))
 
-    // Transform Options to Edges
     // Each option represents ONE connection: course_node_id -> next_node_id
-    const edges: any[] = []
-    nodes.forEach((node: any) => {
+    const edges: FlowEdge[] = []
+    nodes.forEach((node: CourseNodeData) => {
       if (node.options && node.options.length) {
-        node.options.forEach((opt: any) => {
+        node.options.forEach((opt) => {
           if (opt.next_node_id) {
-            const edge: any = {
+            const edge: FlowEdge = {
               id: `e${opt.id || `${node.id}-${opt.next_node_id}`}`,
               source: node.id.toString(),
               target: opt.next_node_id.toString(),
@@ -98,10 +108,10 @@ const fetchNodes = async () => {
 // Init composables
 const { createDebouncer, createStateDebouncer } = useDebounce(1000)
 
-const syncNodesData = (updatedNodes: any[]) => {
+const syncNodesData = (updatedNodes: SyncNodeData[]) => {
   initialNodes.value.forEach((node) => {
     const serverNode = updatedNodes.find(
-      (n: any) => n.id.toString() === node.id
+      (n: SyncNodeData) => n.id.toString() === node.id
     )
     if (serverNode) {
       node.data = {
@@ -119,7 +129,7 @@ const syncNodesData = (updatedNodes: any[]) => {
   })
 }
 
-const _saveConnections = createStateDebouncer<{ edges: any[] }>(
+const _saveConnections = createStateDebouncer<{ edges: FlowEdge[] }>(
   async ({ edges }) => {
     const connections = edges.map((edge) => ({
       source_node_id: parseInt(edge.source),
@@ -130,7 +140,7 @@ const _saveConnections = createStateDebouncer<{ edges: any[] }>(
         t('course.editor.default_connection_label'),
     }))
 
-    const response = await apiRequest({
+    const response = await apiRequest<{ data: SyncNodeData[] }>({
       method: 'POST',
       url: `/v1/admin/courses/${courseId}/nodes/update-connections`,
       body: { connections },
@@ -149,7 +159,7 @@ const _saveConnections = createStateDebouncer<{ edges: any[] }>(
   }
 )
 
-const handleConnectionChange = (data: { edges: any[] }) => {
+const handleConnectionChange = (data: { edges: FlowEdge[] }) => {
   isSaving.value = true
   _saveConnections(data)
 }
@@ -261,7 +271,7 @@ const handleNodeSave = async (formData: NodeData) => {
 
 const handleAction = async ({ type, id }: { type: string; id: string }) => {
   if (type === 'edit') {
-    const node = initialNodes.value.find((n: any) => n.id === id)
+    const node = initialNodes.value.find((n: FlowNode) => n.id === id)
     if (!node) return
 
     openNodeModal({
@@ -269,7 +279,7 @@ const handleAction = async ({ type, id }: { type: string; id: string }) => {
       title: node.data.title,
       type: node.data.type,
       video_url: node.data.video_url,
-      playback_speed: node.data.playback_speed,
+      playback_speed: node.data.playback_speed ?? undefined,
       content: node.data.content,
     })
   } else if (type === 'delete') {

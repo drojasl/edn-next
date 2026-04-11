@@ -7,22 +7,7 @@ import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 import AdminDataTable from '../../components/admin/AdminDataTable.vue'
 
-interface Course {
-  id: number
-  title: string
-}
-
-interface AccessCode {
-  id: number
-  code: string
-  course_id: number
-  user_id: number
-  expires_at: string | null
-  is_active: boolean
-  created_at: string
-  course?: Course
-  user?: { id: number; name: string; last_name: string }
-}
+import { type Course, type AccessCode } from '../../types/types'
 
 const codes = ref<AccessCode[]>([])
 const courses = ref<Course[]>([])
@@ -107,13 +92,13 @@ const checkCode = async () => {
 
   codeAvailability.value.checking = true
   try {
-    const result = await apiRequest({
+    const result = await apiRequest<{ available: boolean }>({
       method: 'POST',
       url: '/v1/admin/access-codes/validate-code',
       body: { code: newCodeData.value.code },
     })
 
-    if (result.success) {
+    if (result.success && result.data) {
       codeAvailability.value.available = result.data.available
       codeAvailability.value.message = result.data.available
         ? t('admin.codes.check_available')
@@ -165,8 +150,9 @@ const handleGenerateCode = async () => {
         'error'
       )
     }
-  } catch (e: any) {
-    toastRef.value?.show(e.message || t('common.error'), 'error')
+  } catch (e: unknown) {
+    const error = e as Error
+    toastRef.value?.show(error.message || t('common.error'), 'error')
   }
 }
 

@@ -5,16 +5,7 @@ import { apiRequest } from '../../api/apiClient'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 import AdminDataTable from '../../components/admin/AdminDataTable.vue'
 
-interface Prospect {
-  id: number
-  name: string
-  email: string
-  phone: string
-  city: string
-  country: string
-  is_reviewed: boolean
-  created_at: string
-}
+import { type Prospect, type ApiError } from '../../types/types'
 
 const prospects = ref<Prospect[]>([])
 const isLoading = ref(true)
@@ -31,8 +22,8 @@ const fetchProspects = async () => {
     if (response.success && response.data) {
       prospects.value = response.data
     }
-  } catch (e) {
-    console.error('Error fetching prospects:', e)
+  } catch (error: unknown) {
+    console.error('Error fetching prospects:', error as ApiError)
   } finally {
     isLoading.value = false
   }
@@ -47,8 +38,8 @@ const toggleReview = async (prospect: Prospect) => {
     if (response.success) {
       prospect.is_reviewed = !prospect.is_reviewed
     }
-  } catch (e) {
-    console.error('Error toggling review status:', e)
+  } catch (error: unknown) {
+    console.error('Error toggling review status:', error as ApiError)
   } finally {
     activeMenuId.value = null
   }

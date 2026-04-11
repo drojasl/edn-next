@@ -2,23 +2,24 @@
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { computed, watch, onMounted } from 'vue'
 
+interface FlowNodeData {
+  title: string
+  description?: string
+  type?: string
+  isStart?: boolean
+  isEnd?: boolean
+  options?: { id: string; label: string }[]
+  content?: {
+    description?: string
+    buttons?: string[]
+    [key: string]: unknown
+  }
+  isCourse?: boolean
+}
+
 const props = defineProps<{
   id: string
-  data: {
-    title: string
-    description?: string
-    type?: string // 'video', 'form', 'course', etc.
-    isStart?: boolean
-    isEnd?: boolean
-    options?: { id: string; label: string }[] // For branching nodes
-    content?: {
-      description?: string
-      buttons?: string[]
-      [key: string]: any
-    }
-    // For Course nodes, we might just use a default output
-    isCourse?: boolean
-  }
+  data: FlowNodeData
   selected?: boolean
 }>()
 

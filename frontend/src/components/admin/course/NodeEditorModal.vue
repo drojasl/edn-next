@@ -4,22 +4,7 @@ import { useI18n } from 'vue-i18n'
 import VideoConfigFields from './VideoConfigFields.vue'
 
 const { t } = useI18n()
-
-export interface NodeData {
-  id?: number
-  title: string
-  type: 'video' | 'form' | 'menu'
-  video_url?: string
-  playback_speed?: number
-  meeting_link?: string
-  show_description: boolean
-  content?: {
-    description?: string
-    fields?: any[]
-    buttons?: string[]
-    [key: string]: any
-  }
-}
+import { type NodeData, type CourseNodeField } from '../../../types/types'
 
 const show = ref(false)
 const isEditing = ref(false)
@@ -102,11 +87,20 @@ const AVAILABLE_FIELDS = [
   },
 ]
 
-const toggleField = (field: any) => {
+const toggleField = (field: {
+  name: string
+  labelKey: string
+  type: string
+  required: boolean
+  min?: number
+  max?: number
+}) => {
   if (!form.content) form.content = {}
   if (!form.content.fields) form.content.fields = []
 
-  const index = form.content.fields.findIndex((f: any) => f.name === field.name)
+  const index = form.content.fields.findIndex(
+    (f: CourseNodeField) => f.name === field.name
+  )
   if (index > -1) {
     form.content.fields.splice(index, 1)
   } else {
@@ -120,7 +114,7 @@ const toggleField = (field: any) => {
     })
 
     // Keep sorting as per AVAILABLE_FIELDS
-    form.content.fields.sort((a: any, b: any) => {
+    form.content.fields.sort((a, b) => {
       const indexA = AVAILABLE_FIELDS.findIndex((f) => f.name === a.name)
       const indexB = AVAILABLE_FIELDS.findIndex((f) => f.name === b.name)
       return indexA - indexB
@@ -129,7 +123,7 @@ const toggleField = (field: any) => {
 }
 
 const isFieldSelected = (fieldName: string) => {
-  return form.content?.fields?.some((f: any) => f.name === fieldName)
+  return form.content?.fields?.some((f) => f.name === fieldName)
 }
 
 const addButton = () => {
@@ -360,9 +354,15 @@ defineExpose({ open, close })
                     <!-- Video Content -->
                     <div v-if="form.type === 'video'">
                       <VideoConfigFields
-                        v-model:video-url="form.video_url"
-                        v-model:playback-speed="form.playback_speed"
                         :label="t('course.editor.modal.field_video_url')"
+                        :video-url="form.video_url ?? undefined"
+                        :playback-speed="
+                          (form.playback_speed as number) ?? undefined
+                        "
+                        @update:video-url="form.video_url = $event ?? undefined"
+                        @update:playback-speed="
+                          form.playback_speed = $event ?? undefined
+                        "
                       />
                     </div>
 
@@ -543,10 +543,16 @@ defineExpose({ open, close })
                     <!-- Menu/Links Content -->
                     <div v-if="form.type === 'menu'" class="space-y-4">
                       <VideoConfigFields
-                        v-model:video-url="form.video_url"
-                        v-model:playback-speed="form.playback_speed"
                         :label="
                           t('course.editor.modal.field_video_url_optional')
+                        "
+                        :video-url="form.video_url ?? undefined"
+                        :playback-speed="
+                          (form.playback_speed as number) ?? undefined
+                        "
+                        @update:video-url="form.video_url = $event ?? undefined"
+                        @update:playback-speed="
+                          form.playback_speed = $event ?? undefined
                         "
                       />
 

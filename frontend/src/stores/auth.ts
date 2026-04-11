@@ -2,27 +2,15 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiRequest } from '../api/apiClient'
-
-export interface User {
-  id: number
-  name: string
-  last_name: string
-  codigo_amway: string
-  is_account_holder: boolean
-  email?: string
-  slug?: string
-  is_active?: boolean
-  profile_picture?: string | null
-  social_links?: any[]
-}
+import type { User, AuthResponse, ApiError } from '../types/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const token = ref(localStorage.getItem('token') || '')
   const router = useRouter()
 
-  async function login(credentials: any) {
-    const result = await apiRequest({
+  async function login(credentials: Record<string, unknown>) {
+    const result = await apiRequest<AuthResponse>({
       method: 'POST',
       url: '/auth/login',
       body: credentials,
@@ -35,14 +23,16 @@ export const useAuthStore = defineStore('auth', () => {
       router.push('/admin')
     } else {
       console.error('Login failed', result.error)
-      const error: any = new Error(result.error?.message || 'Login failed')
+      const error = new Error(
+        result.error?.message || 'Login failed'
+      ) as Error & ApiError
       error.code = result.error?.code
       throw error
     }
   }
 
-  async function register(userData: any) {
-    const result = await apiRequest({
+  async function register(userData: Record<string, unknown>) {
+    const result = await apiRequest<AuthResponse>({
       method: 'POST',
       url: '/register',
       body: userData,
@@ -74,7 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchUser() {
     if (!token.value) return
 
-    const result = await apiRequest({
+    const result = await apiRequest<User>({
       method: 'GET',
       url: '/user',
     })

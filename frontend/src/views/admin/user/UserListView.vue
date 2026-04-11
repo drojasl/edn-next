@@ -7,27 +7,30 @@ import BaseButton from '../../../components/common/BaseButton.vue'
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.vue'
 import AdminDataTable from '../../../components/admin/AdminDataTable.vue'
 
+import { type User, type ApiError } from '../../../types/types'
+
 const { t } = useI18n()
 const router = useRouter()
 
-const users = ref<any[]>([])
+const users = ref<User[]>([])
 const loading = ref(true)
 const errorMessage = ref('')
 
 const fetchUsers = async () => {
   loading.value = true
   try {
-    const result = await apiRequest({
+    const result = await apiRequest<User[]>({
       method: 'GET',
       url: '/v1/admin/entrepreneurs',
     })
-    if (result.success) {
+    if (result.success && result.data) {
       users.value = result.data
     } else {
       errorMessage.value = result.error?.message || t('common.error')
     }
-  } catch (error: any) {
-    errorMessage.value = error.message
+  } catch (error: unknown) {
+    const err = error as ApiError
+    errorMessage.value = err.message
   } finally {
     loading.value = false
   }
@@ -44,8 +47,9 @@ const deleteUser = async (id: number) => {
     if (result.success) {
       users.value = users.value.filter((u) => u.id !== id)
     }
-  } catch (error: any) {
-    alert(error.message)
+  } catch (error: unknown) {
+    const err = error as ApiError
+    alert(err.message)
   }
 }
 

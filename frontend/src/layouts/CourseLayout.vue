@@ -7,6 +7,17 @@ import { apiRequest } from '../api/apiClient'
 import LanguageSwitcher from '../components/common/LanguageSwitcher.vue'
 import SocialIcon from '../components/common/SocialIcon.vue'
 
+import { type User, type Course, type CourseNodeData } from '../types/types'
+import BaseButton from '../components/common/BaseButton.vue'
+
+interface EntrepreneurPublic extends User {
+  social?: Record<string, string>
+}
+
+interface CoursePublic extends Course {
+  nodes: CourseNodeData[]
+}
+
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
@@ -14,8 +25,8 @@ const authStore = useAuthStore()
 
 const isSidebarOpen = ref(false)
 const isLoading = ref(true)
-const courseData = ref<any>(null)
-const entrepreneurData = ref<any>(null)
+const courseData = ref<CoursePublic | null>(null)
+const entrepreneurData = ref<EntrepreneurPublic | null>(null)
 const selectedNodeId = ref<number | null>(null)
 const selectedNodeSlug = ref<string | null>(null)
 const maxPositionReached = ref(0)
@@ -33,7 +44,7 @@ const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
 
-const selectNode = (node: any) => {
+const selectNode = (node: CourseNodeData) => {
   if (isNodeDisabled(node)) return
   router.push(
     `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${node.slug}`
@@ -49,7 +60,7 @@ watch(
       selectedNodeSlug.value = newNodeSlug as string
       if (courseData.value?.nodes) {
         const node = courseData.value.nodes.find(
-          (n: any) => n.slug === newNodeSlug
+          (n: CourseNodeData) => n.slug === newNodeSlug
         )
         if (node) selectedNodeId.value = node.id
       }
@@ -59,19 +70,22 @@ watch(
 )
 
 const activeNode = computed(() => {
-  return courseData.value?.nodes?.find(
-    (n: any) => n.id === selectedNodeId.value
+  if (selectedNodeId.value === null || !courseData.value?.nodes)
+    return undefined
+  return courseData.value.nodes.find(
+    (n: CourseNodeData) => n.id == selectedNodeId.value
   )
 })
 
 watch(
   activeNode,
   (node) => {
-    if (node && (node as any).position > maxPositionReached.value) {
-      maxPositionReached.value = (node as any).position
+    const n = node as CourseNodeData & { position: number }
+    if (n && n.position > maxPositionReached.value) {
+      maxPositionReached.value = n.position
       localStorage.setItem(
         `course_progress_${courseSlug.value}`,
-        (node as any).position.toString()
+        n.position.toString()
       )
 
       // Si ya tenemos el email del prospecto, sincronizar con el backend
@@ -81,7 +95,7 @@ watch(
       }
 
       // Si es el nodo final, marcar el curso como completado
-      if ((node as any).is_end) {
+      if ((node as CourseNodeData).is_end) {
         markCourseAsCompleted(courseSlug.value)
       }
     }
@@ -96,7 +110,7 @@ const syncCurrentProgress = async (email: string) => {
     try {
       const accessData = JSON.parse(accessDataRaw)
       code = accessData.accessCode
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e)
     }
   }
@@ -154,10 +168,10 @@ const switchCourse = (slug: string) => {
   if (isSidebarOpen.value) toggleSidebar()
 }
 
-const isNodeDisabled = (node: any) => {
+const isNodeDisabled = (node: CourseNodeData) => {
   if (!activeNode.value) return true
   // Disable nodes from the current position onwards
-  return node.position >= activeNode.value.position
+  return (node.position || 0) >= (activeNode.value.position || 0)
 }
 
 const initializeCourse = () => {
@@ -201,27 +215,36 @@ const fetchCourseData = async () => {
   })
 
   if (result.success && result.data) {
-    courseData.value = result.data.course
-    entrepreneurData.value = result.data.entrepreneur
+    const data = result.data as {
+      course: CoursePublic
+      entrepreneur: EntrepreneurPublic
+    }
+    courseData.value = data.course
+    entrepreneurData.value = data.entrepreneur
 
     // Auto-select start node or use the one from URL
     const nodeSlugFromUrl = route.params.nodeSlug
-    if (nodeSlugFromUrl) {
+    if (nodeSlugFromUrl && courseData.value) {
       selectedNodeSlug.value = nodeSlugFromUrl as string
       const node = courseData.value.nodes.find(
-        (n: any) => n.slug === nodeSlugFromUrl
+        (n: CourseNodeData) => n.slug === nodeSlugFromUrl
       )
       if (node) selectedNodeId.value = node.id
-    } else {
-      const startNode = courseData.value.nodes.find((n: any) => n.is_start)
+    } else if (courseData.value) {
+      const startNode = courseData.value.nodes.find(
+        (n: CourseNodeData) => n.is_start
+      )
       if (startNode) {
         router.replace(
           `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${startNode.slug}`
         )
-      } else if (courseData.value.nodes.length > 0) {
-        router.replace(
-          `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${courseData.value.nodes[0].slug}`
-        )
+      } else {
+        const firstNode = courseData.value?.nodes?.[0]
+        if (firstNode) {
+          router.replace(
+            `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${firstNode.slug}`
+          )
+        }
       }
     }
   } else {
@@ -284,7 +307,12 @@ const handleRecoverProgress = async () => {
   })
 
   if (result.success && result.data) {
-    const { progress, completed, history } = result.data
+    const data = result.data as {
+      progress: Record<string, number>
+      completed: string[]
+      history: string[]
+    }
+    const { progress, completed, history } = data
 
     // Nodes progress
     if (progress) {
@@ -538,7 +566,7 @@ const getFullUrl = (path: string | null) => {
                     <svg
                       v-if="
                         isNodeDisabled(node) &&
-                        node.position > (activeNode?.position || 0)
+                        (node.position || 0) > (activeNode?.position || 0)
                       "
                       xmlns="http://www.w3.org/2000/svg"
                       class="h-4 w-4"
@@ -688,7 +716,7 @@ const getFullUrl = (path: string | null) => {
         </div>
         <div
           v-else
-          class="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border border-slate-200/50"
+          class="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border border-slate-200/50 flex-1"
         >
           <router-view :node="activeNode" :course="courseData"></router-view>
         </div>
