@@ -2,9 +2,16 @@
 import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import VideoConfigFields from './VideoConfigFields.vue'
+import RichTextEditor from '../../common/RichTextEditor.vue'
 
 const { t } = useI18n()
-import { type NodeData, type CourseNodeField } from '../../../types/types'
+import {
+  type NodeData,
+  type CourseNodeField,
+  type MenuButton,
+} from '../../../types'
+
+const getMenuButtons = () => (form.content?.buttons || []) as MenuButton[]
 
 const show = ref(false)
 const isEditing = ref(false)
@@ -129,7 +136,11 @@ const isFieldSelected = (fieldName: string) => {
 const addButton = () => {
   if (!form.content) form.content = {}
   if (!form.content.buttons) form.content.buttons = []
-  form.content.buttons.push(`Botón ${form.content.buttons.length + 1}`)
+  form.content.buttons.push({
+    label: `Botón ${form.content.buttons.length + 1}`,
+    url: '',
+    is_external: false,
+  })
 }
 
 const removeButton = (index: number) => {
@@ -152,6 +163,14 @@ const open = (data?: Partial<NodeData>) => {
       content: data.content || { description: '', fields: [], buttons: [] },
     })
     if (form.content && !form.content.buttons) form.content.buttons = []
+    if (form.content && form.content.buttons) {
+      form.content.buttons = form.content.buttons.map(
+        (b: string | MenuButton) =>
+          typeof b === 'string'
+            ? { label: b, url: '', is_external: false }
+            : { ...b, is_external: b.is_external || !!b.url }
+      )
+    }
   } else {
     isEditing.value = false
     Object.assign(form, {
@@ -197,7 +216,10 @@ const handleSave = () => {
 
   if (form.type === 'menu' && form.content?.buttons) {
     form.content.buttons = form.content.buttons.filter(
-      (b) => b && b.trim() !== ''
+      (b: string | MenuButton) =>
+        b &&
+        ((typeof b === 'string' && b.trim() !== '') ||
+          (typeof b === 'object' && b.label && b.label.trim() !== ''))
     )
   }
 
@@ -317,14 +339,12 @@ defineExpose({ open, close })
                           >
                         </div>
                       </div>
-                      <textarea
+                      <RichTextEditor
                         v-model="form.content!.description"
-                        rows="3"
-                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
                         :placeholder="
                           t('course.editor.modal.field_description_placeholder')
                         "
-                      ></textarea>
+                      />
                     </div>
                   </div>
 
@@ -586,41 +606,116 @@ defineExpose({ open, close })
 
                       <div class="space-y-3">
                         <div
-                          v-for="(_btn, idx) in form.content?.buttons || []"
+                          v-for="(btn, idx) in getMenuButtons()"
                           :key="idx"
-                          class="flex gap-2 items-center"
+                          class="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl"
                         >
-                          <input
-                            v-model="form.content!.buttons![idx]"
-                            type="text"
-                            class="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                            :class="
-                              !(form.content?.buttons?.[idx] || '').trim()
-                                ? 'border-red-400 focus:ring-red-500'
-                                : ''
-                            "
-                            :placeholder="'Texto del botón ' + (idx + 1)"
-                          />
-                          <button
-                            class="p-2.5 text-red-500 bg-red-50 rounded-xl hover:bg-red-500 hover:text-white transition-all group"
-                            title="Eliminar Botón"
-                            @click="removeButton(idx)"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke-width="2"
-                              stroke="currentColor"
-                              class="w-4 h-4 transition-transform group-hover:scale-110"
+                          <div class="flex gap-2 items-center">
+                            <input
+                              v-model="btn.label"
+                              type="text"
+                              class="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                              :class="
+                                !(btn.label || '').trim()
+                                  ? 'border-red-400 focus:ring-red-500'
+                                  : ''
+                              "
+                              :placeholder="'Texto del botón ' + (idx + 1)"
+                            />
+                            <label
+                              class="flex shrink-0 items-center gap-1.5 cursor-pointer group bg-white border border-slate-200 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                              title="Activar URL externa"
                             >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                              <input
+                                v-model="btn.is_external"
+                                type="checkbox"
+                                class="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 transition-colors cursor-pointer"
+                                @change="!btn.is_external && (btn.url = '')"
                               />
-                            </svg>
-                          </button>
+                              <svg
+                                v-if="btn.is_external"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="2"
+                                stroke="currentColor"
+                                class="w-4 h-4 text-amber-600 hidden sm:block"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+                                />
+                              </svg>
+                            </label>
+
+                            <button
+                              class="p-2.5 shrink-0 text-red-500 bg-red-50 rounded-xl hover:bg-red-500 hover:text-white transition-all group"
+                              title="Eliminar Botón"
+                              @click="removeButton(idx)"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="2"
+                                stroke="currentColor"
+                                class="w-4 h-4 transition-transform group-hover:scale-110"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+
+                          <div
+                            v-if="btn.is_external"
+                            class="flex flex-col gap-2"
+                          >
+                            <div class="flex gap-2 items-center">
+                              <input
+                                v-model="btn.url"
+                                type="text"
+                                class="flex-1 px-4 py-2 bg-white border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500 text-sm outline-none transition-all placeholder-slate-400"
+                                placeholder="URL Externa (ej: https://...)"
+                              />
+                              <div
+                                class="text-[10px] text-amber-600 font-bold max-w-[80px] text-center leading-tight"
+                              >
+                                Se abre en pestaña nueva
+                              </div>
+                            </div>
+                            <div class="flex gap-1 flex-wrap pl-1">
+                              <span
+                                class="text-[10px] text-slate-500 font-medium self-center mr-1"
+                                >Variables:</span
+                              >
+                              <button
+                                type="button"
+                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] tracking-wide transition-colors"
+                                @click="btn.url = '{{ ABO_LINK }}'"
+                              >
+                                <span v-pre>ABO LINK</span>
+                              </button>
+                              <button
+                                type="button"
+                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] tracking-wide transition-colors"
+                                @click="btn.url = '{{ CLIENT_LINK }}'"
+                              >
+                                <span v-pre>CLIENT LINK</span>
+                              </button>
+                              <button
+                                type="button"
+                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] tracking-wide transition-colors"
+                                @click="btn.url = '{{ MY_STORE_LINK }}'"
+                              >
+                                <span v-pre>MY STORE LINK</span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
 
                         <div

@@ -44,6 +44,9 @@ class CourseController extends Controller
                 'profile_picture' => $user->profile_picture,
                 'style' => $user->styleSettings,
                 'social' => $user->socialLinks->pluck('value', 'platform'),
+                'abo_link' => $user->abo_link,
+                'client_link' => $user->client_link,
+                'my_digital_store' => $user->my_digital_store,
             ]
         ]);
     }

@@ -7,7 +7,7 @@ import { apiRequest } from '../api/apiClient'
 import LanguageSwitcher from '../components/common/LanguageSwitcher.vue'
 import SocialIcon from '../components/common/SocialIcon.vue'
 
-import { type User, type Course, type CourseNodeData } from '../types/types'
+import { type User, type Course, type CourseNodeData } from '../types'
 import BaseButton from '../components/common/BaseButton.vue'
 
 interface EntrepreneurPublic extends User {
@@ -23,7 +23,61 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
+interface StartedCourse {
+  slug: string
+  title: string
+  url: string
+  entrepreneurSlug: string
+}
+
 const isSidebarOpen = ref(false)
+const startedCourses = ref<StartedCourse[]>([])
+
+const getCoursesFromCookie = (): StartedCourse[] => {
+  const match = document.cookie.match(
+    new RegExp('(^| )started_courses=([^;]+)')
+  )
+  if (match) {
+    try {
+      return JSON.parse(decodeURIComponent(match[2] as string))
+    } catch (e) {
+      return []
+    }
+  }
+  return []
+}
+
+const saveCourseToCookie = (course: StartedCourse) => {
+  const courses = getCoursesFromCookie()
+  const existingIndex = courses.findIndex((c) => c.slug === course.slug)
+  if (existingIndex >= 0) {
+    courses[existingIndex] = course
+  } else {
+    courses.push(course)
+  }
+  const d = new Date()
+  d.setTime(d.getTime() + 365 * 24 * 60 * 60 * 1000) // 1 year
+  document.cookie = `started_courses=${encodeURIComponent(
+    JSON.stringify(courses)
+  )};expires=${d.toUTCString()};path=/`
+  startedCourses.value = courses
+}
+
+const goToCourse = (c: StartedCourse) => {
+  const accessData = localStorage.getItem('course_access')
+  if (accessData) {
+    try {
+      const parsed = JSON.parse(accessData)
+      parsed.courseSlug = c.slug
+      parsed.entrepreneurSlug = c.entrepreneurSlug
+      localStorage.setItem('course_access', JSON.stringify(parsed))
+    } catch (e) {
+      console.error(e)
+    }
+  }
+  router.push(c.url)
+  if (isSidebarOpen.value) toggleSidebar()
+}
 const isLoading = ref(true)
 const courseData = ref<CoursePublic | null>(null)
 const entrepreneurData = ref<EntrepreneurPublic | null>(null)
@@ -42,14 +96,6 @@ const courseSlug = computed(() => route.params.courseSlug as string)
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
-}
-
-const selectNode = (node: CourseNodeData) => {
-  if (isNodeDisabled(node)) return
-  router.push(
-    `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${node.slug}`
-  )
-  if (isSidebarOpen.value) toggleSidebar()
 }
 
 // Watch for URL changes to update state
@@ -153,27 +199,6 @@ const addToCourseHistory = (slug: string) => {
   }
 }
 
-const switchCourse = (slug: string) => {
-  if (slug === courseSlug.value) return
-
-  // Actualizar acceso para el router/validación
-  const accessData = localStorage.getItem('course_access')
-  if (accessData) {
-    const parsed = JSON.parse(accessData)
-    parsed.courseSlug = slug
-    localStorage.setItem('course_access', JSON.stringify(parsed))
-  }
-
-  router.push(`/cursos/${entrepreneurSlug.value}/${slug}`)
-  if (isSidebarOpen.value) toggleSidebar()
-}
-
-const isNodeDisabled = (node: CourseNodeData) => {
-  if (!activeNode.value) return true
-  // Disable nodes from the current position onwards
-  return (node.position || 0) >= (activeNode.value.position || 0)
-}
-
 const initializeCourse = () => {
   if (!validateAccess()) {
     router.push('/cursos')
@@ -221,6 +246,19 @@ const fetchCourseData = async () => {
     }
     courseData.value = data.course
     entrepreneurData.value = data.entrepreneur
+
+    const firstOrStartNode =
+      courseData.value.nodes.find((n: CourseNodeData) => n.is_start) ||
+      courseData.value.nodes[0]
+
+    if (firstOrStartNode) {
+      saveCourseToCookie({
+        slug: courseSlug.value,
+        title: courseData.value.title,
+        url: `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${firstOrStartNode.slug}`,
+        entrepreneurSlug: entrepreneurSlug.value,
+      })
+    }
 
     // Auto-select start node or use the one from URL
     const nodeSlugFromUrl = route.params.nodeSlug
@@ -272,6 +310,7 @@ const validateAccess = () => {
 }
 
 onMounted(() => {
+  startedCourses.value = getCoursesFromCookie()
   initializeCourse()
 })
 
@@ -458,9 +497,7 @@ const getFullUrl = (path: string | null) => {
           <div
             class="h-16 flex items-center justify-between px-6 border-b border-slate-100 flex-shrink-0"
           >
-            <span class="font-bold text-lg">{{
-              t('course.sidebarTitle')
-            }}</span>
+            <span class="font-bold text-lg">Mis Cursos</span>
             <button
               class="p-2 hover:bg-slate-100 rounded-lg text-slate-400"
               @click="toggleSidebar"
@@ -482,123 +519,100 @@ const getFullUrl = (path: string | null) => {
             </button>
           </div>
 
-          <div class="flex-1 overflow-y-auto p-4 space-y-6">
-            <!-- Selector de Cursos (Historial) -->
-            <div v-if="courseHistory.length > 1" class="space-y-2">
-              <h3
-                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2"
-              >
-                Mis Cursos
-              </h3>
-              <div class="grid gap-1">
+          <div class="flex-1 overflow-y-auto p-4 flex flex-col">
+            <!-- Cursos Iniciados -->
+            <div class="space-y-3 flex-1">
+              <nav class="space-y-2">
                 <button
-                  v-for="slug in courseHistory"
-                  :key="slug"
-                  class="flex items-center gap-2 p-2 rounded-lg text-sm transition-all text-left"
+                  v-for="c in startedCourses"
+                  :key="c.slug"
+                  class="w-full group flex items-center justify-between p-3 rounded-xl transition-all border text-left"
                   :class="
-                    slug === courseSlug
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                      : 'text-slate-600 hover:bg-slate-50'
+                    c.slug === courseSlug
+                      ? 'bg-indigo-50 border-indigo-100 shadow-sm'
+                      : 'border-transparent hover:bg-slate-50 hover:border-slate-100'
                   "
-                  @click="switchCourse(slug)"
+                  @click="goToCourse(c)"
                 >
-                  <div
-                    class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                    :class="
-                      slug === courseSlug ? 'bg-white/20' : 'bg-slate-100'
-                    "
-                  >
-                    <svg
-                      v-if="completedCourses.includes(slug)"
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-3 w-3"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span v-else class="text-[8px] font-bold">...</span>
-                  </div>
-                  <span class="truncate">{{
-                    slug === courseSlug ? courseData?.title || slug : slug
-                  }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Nodos del Curso Actual -->
-            <div class="space-y-2">
-              <h3
-                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2"
-              >
-                {{ courseData?.title }}
-              </h3>
-              <nav class="space-y-1">
-                <div
-                  v-for="node in courseData?.nodes"
-                  :key="node.id"
-                  class="group flex items-center justify-between p-3 rounded-xl transition-all border border-transparent"
-                  :class="[
-                    selectedNodeId === node.id
-                      ? 'bg-indigo-50 border-indigo-100'
-                      : 'hover:bg-slate-50 cursor-pointer hover:border-slate-100',
-                    isNodeDisabled(node)
-                      ? 'opacity-50 grayscale pointer-events-none cursor-not-allowed bg-slate-50/50'
-                      : '',
-                  ]"
-                  @click="selectNode(node)"
-                >
-                  <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-3 w-full">
                     <div
-                      class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-400"
-                    >
-                      <span>{{ node.position }}</span>
-                    </div>
-                    <span class="text-sm font-medium text-slate-900">{{
-                      node.title
-                    }}</span>
-                  </div>
-                  <div v-if="node.type === 'video'" class="text-slate-300">
-                    <svg
-                      v-if="
-                        isNodeDisabled(node) &&
-                        (node.position || 0) > (activeNode?.position || 0)
+                      class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      :class="
+                        c.slug === courseSlug
+                          ? 'bg-indigo-100 text-indigo-600'
+                          : 'bg-slate-100 text-slate-400'
                       "
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                    <svg
-                      v-else
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      <!-- Progress or Course Icon -->
+                      <svg
+                        v-if="completedCourses.includes(c.slug)"
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 text-emerald-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <svg
+                        v-else
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                        />
+                      </svg>
+                    </div>
+                    <span
+                      class="text-sm font-medium line-clamp-2"
+                      :class="
+                        c.slug === courseSlug
+                          ? 'text-indigo-900 font-bold'
+                          : 'text-slate-700 group-hover:text-slate-900'
+                      "
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                      />
-                    </svg>
+                      {{ c.title }}
+                    </span>
                   </div>
-                </div>
+                </button>
               </nav>
+
+              <div
+                v-if="startedCourses.length === 0"
+                class="text-center py-8 px-4"
+              >
+                <div
+                  class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-slate-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                </div>
+                <p class="text-sm font-medium text-slate-500">
+                  Aún no has iniciado cursos.
+                </p>
+              </div>
             </div>
 
             <!-- Botón de Retomar Progreso -->
@@ -718,7 +732,11 @@ const getFullUrl = (path: string | null) => {
           v-else
           class="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border border-slate-200/50 flex-1"
         >
-          <router-view :node="activeNode" :course="courseData"></router-view>
+          <router-view
+            :node="activeNode"
+            :course="courseData"
+            :entrepreneur="entrepreneurData"
+          ></router-view>
         </div>
       </main>
     </div>

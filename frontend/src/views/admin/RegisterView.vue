@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import EntrepreneurForm from '../../components/admin/user/EntrepreneurForm.vue'
 
-import { type User, type ApiError } from '../../types/types'
+import { type User, type ApiError } from '../../types'
 
 const { t } = useI18n()
 const authStore = useAuthStore()

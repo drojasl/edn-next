@@ -5,7 +5,7 @@ import { apiRequest } from '../../api/apiClient'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 import AdminDataTable from '../../components/admin/AdminDataTable.vue'
 
-import { type Prospect, type ApiError } from '../../types/types'
+import { type Prospect, type ApiError } from '../../types'
 
 const prospects = ref<Prospect[]>([])
 const isLoading = ref(true)

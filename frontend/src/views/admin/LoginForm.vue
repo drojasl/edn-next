@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import BaseButton from '../../components/common/BaseButton.vue'
-import type { ApiError } from '../../types/types'
+import type { ApiError } from '../../types'
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()

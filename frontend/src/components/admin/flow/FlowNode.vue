@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { computed, watch, onMounted } from 'vue'
+import type { MenuButton } from '../../../types'
 
 interface FlowNodeData {
   title: string
@@ -11,7 +12,7 @@ interface FlowNodeData {
   options?: { id: string; label: string }[]
   content?: {
     description?: string
-    buttons?: string[]
+    buttons?: (string | MenuButton)[]
     [key: string]: unknown
   }
   isCourse?: boolean
@@ -28,6 +29,9 @@ defineEmits(['action'])
 const isCourse = computed(() => props.data?.isCourse)
 const isStart = computed(() => props.data?.isStart)
 const isEnd = computed(() => props.data?.isEnd)
+
+const getMenuButtons = () =>
+  (props.data?.content?.buttons || []) as (string | MenuButton)[]
 
 const { updateNodeInternals } = useVueFlow()
 
@@ -154,17 +158,38 @@ const borderColor = computed(() => {
         class="mt-2 space-y-2 border-t border-slate-100 pt-3 pb-1 -mx-4 px-4"
       >
         <div
-          v-for="(btn, idx) in data.content.buttons"
-          :key="`${btn}-${idx}`"
+          v-for="(btn, idx) in getMenuButtons()"
+          :key="`${typeof btn === 'string' ? btn : btn.label}-${idx}`"
           class="relative group"
         >
           <div
-            class="text-[10px] font-bold text-slate-600 flex items-center justify-between px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
+            class="text-[10px] font-bold text-slate-600 flex items-center justify-between px-2 py-1.5 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors gap-2"
           >
-            <span class="truncate">{{ btn }}</span>
+            <span class="truncate">{{
+              typeof btn === 'string' ? btn : btn.label
+            }}</span>
+            <svg
+              v-if="typeof btn === 'object' && btn.url"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              class="w-3 h-3 text-slate-400 shrink-0"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
+                clip-rule="evenodd"
+              />
+              <path
+                fill-rule="evenodd"
+                d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
+                clip-rule="evenodd"
+              />
+            </svg>
           </div>
-          <!-- Handle specifically for this button -->
+          <!-- Handle specifically for this button (only if NO url exists) -->
           <Handle
+            v-if="!(typeof btn === 'object' && btn.url)"
             :id="`menu-btn-${idx}`"
             type="source"
             :position="Position.Right"

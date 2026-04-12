@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import BaseButton from '../../common/BaseButton.vue'
 import { apiRequest } from '../../../api/apiClient'
 
-import { type User, type SocialLink } from '../../../types/types'
+import { type User, type SocialLink } from '../../../types'
 
 const props = defineProps<{
   mode: 'register' | 'create' | 'edit'

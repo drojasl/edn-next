@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { Node, Edge } from '@vue-flow/core'
 import BaseFlowEditor from './flow/BaseFlowEditor.vue'
 import { EDITOR_CONFIG } from '../../config/constants'
-import { type Course } from '../../types/types'
+import { type Course } from '../../types'
 
 const { t } = useI18n()
 

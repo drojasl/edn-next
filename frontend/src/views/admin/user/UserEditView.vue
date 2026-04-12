@@ -6,7 +6,7 @@ import { apiRequest } from '../../../api/apiClient'
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.vue'
 import EntrepreneurForm from '../../../components/admin/user/EntrepreneurForm.vue'
 
-import { type User, type ApiError } from '../../../types/types'
+import { type User, type ApiError } from '../../../types'
 
 const { t } = useI18n()
 const router = useRouter()

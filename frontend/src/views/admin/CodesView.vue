@@ -7,7 +7,7 @@ import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 import AdminDataTable from '../../components/admin/AdminDataTable.vue'
 
-import { type Course, type AccessCode } from '../../types/types'
+import { type Course, type AccessCode } from '../../types'
 
 const codes = ref<AccessCode[]>([])
 const courses = ref<Course[]>([])

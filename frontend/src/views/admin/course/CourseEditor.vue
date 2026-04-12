@@ -15,7 +15,7 @@ import {
   type FlowNode,
   type FlowEdge,
   type NodeData,
-} from '../../../types/types'
+} from '../../../types'
 import type { ModalConfig } from '../../../components/common/ConfirmationModal.vue'
 
 interface SyncNodeData extends CourseNodeData {
@@ -80,11 +80,17 @@ const fetchNodes = async () => {
               id: `e${opt.id || `${node.id}-${opt.next_node_id}`}`,
               source: node.id.toString(),
               target: opt.next_node_id.toString(),
-              label: opt.label?.startsWith('menu-btn-')
-                ? node.content?.buttons?.[
-                    parseInt(opt.label.replace('menu-btn-', ''))
-                  ] || opt.label
-                : opt.label, // Always show the label
+              label: (() => {
+                if (opt.label?.startsWith('menu-btn-')) {
+                  const btn =
+                    node.content?.buttons?.[
+                      parseInt(opt.label.replace('menu-btn-', ''))
+                    ]
+                  if (typeof btn === 'string') return btn
+                  if (typeof btn === 'object' && btn?.label) return btn.label
+                }
+                return opt.label
+              })(),
               type: 'custom',
               animated: true,
             }

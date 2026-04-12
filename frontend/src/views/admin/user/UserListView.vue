@@ -7,7 +7,7 @@ import BaseButton from '../../../components/common/BaseButton.vue'
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.vue'
 import AdminDataTable from '../../../components/admin/AdminDataTable.vue'
 
-import { type User, type ApiError } from '../../../types/types'
+import { type User, type ApiError } from '../../../types'
 
 const { t } = useI18n()
 const router = useRouter()

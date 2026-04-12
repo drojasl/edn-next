@@ -4,7 +4,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useI18n } from 'vue-i18n'
 import EntrepreneurForm from '../../components/admin/user/EntrepreneurForm.vue'
 import { apiRequest } from '../../api/apiClient'
-import { type User } from '../../types/types'
+import { type User } from '../../types'
 import AppToast from '../../components/common/AppToast.vue'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 

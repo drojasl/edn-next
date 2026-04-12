@@ -5,7 +5,7 @@ import { useAuthStore } from '../../stores/auth'
 import { apiRequest } from '../../api/apiClient'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 
-import { type Course } from '../../types/types'
+import { type Course } from '../../types'
 
 interface FunnelNode {
   id: number

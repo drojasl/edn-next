@@ -3,7 +3,7 @@ import axios, {
   type AxiosRequestConfig,
   AxiosError,
 } from 'axios'
-import type { ApiResponse, RequestParams, ApiError } from '../types/types'
+import type { ApiResponse, RequestParams, ApiError } from '../types'
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({

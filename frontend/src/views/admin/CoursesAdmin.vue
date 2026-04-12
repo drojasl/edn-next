@@ -14,7 +14,7 @@ import {
   type CourseConnectionUpdate,
   type Course,
   type ApiError,
-} from '../../types/types'
+} from '../../types'
 import type { ModalConfig } from '../../components/common/ConfirmationModal.vue'
 
 const courses = ref<Course[]>([])

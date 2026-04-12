@@ -7,7 +7,9 @@ import {
   type Course,
   type ApiError,
   type CourseNodeField,
-} from '../../types/types'
+  type MenuButton,
+  type CourseNodeOption,
+} from '../../types'
 import BaseButton from '../../components/common/BaseButton.vue'
 
 interface Props {
@@ -16,11 +18,36 @@ interface Props {
     nodes?: CourseNodeData[]
     next_course?: { slug: string; id: number }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  entrepreneur?: Record<string, any>
 }
 
 const props = defineProps<Props>()
 const router = useRouter()
 const route = useRoute()
+
+const processedDescription = computed(() => {
+  if (!props.node?.content?.description) return ''
+  let text = props.node.content.description
+  const ent = props.entrepreneur || {}
+
+  // Replace placeholders with entrepreneur data or fallback to '#'
+  text = text.replace(
+    /{{ ABO_LINK }}/g,
+    ent.abo_link ? String(ent.abo_link) : '#'
+  )
+  text = text.replace(
+    /{{ CLIENT_LINK }}/g,
+    ent.client_link ? String(ent.client_link) : '#'
+  )
+  text = text.replace(
+    /{{ MY_STORE_LINK }}/g,
+    ent.my_digital_store ? String(ent.my_digital_store) : '#'
+  )
+
+  return text
+})
+
 const loading = ref(false)
 const formSubmitting = ref(false)
 const formData = reactive<Record<string, string | boolean>>({})
@@ -289,8 +316,100 @@ const handleNavigate = (nextNodeId: number | null) => {
   loading.value = false
 }
 
+interface DisplayButton {
+  id: string
+  label: string
+  url?: string
+  next_node_id?: number | null
+  isExternal: boolean
+}
+
+const displayButtons = computed<DisplayButton[]>(() => {
+  if (!props.node) return []
+  const buttons: DisplayButton[] = []
+
+  const externalButtonIndices = new Set<number>()
+
+  // 1. Add all external buttons from node.content.buttons
+  if (props.node.content?.buttons?.length) {
+    props.node.content.buttons.forEach(
+      (btn: string | MenuButton, idx: number) => {
+        if (typeof btn === 'object' && btn.url) {
+          externalButtonIndices.add(idx)
+
+          let processedUrl = btn.url
+          const ent = props.entrepreneur || {}
+          processedUrl = processedUrl.replace(
+            /{{ ABO_LINK }}/g,
+            ent.abo_link ? String(ent.abo_link) : '#'
+          )
+          processedUrl = processedUrl.replace(
+            /{{ CLIENT_LINK }}/g,
+            ent.client_link ? String(ent.client_link) : '#'
+          )
+          processedUrl = processedUrl.replace(
+            /{{ MY_STORE_LINK }}/g,
+            ent.my_digital_store ? String(ent.my_digital_store) : '#'
+          )
+
+          buttons.push({
+            id: `ext-${idx}`,
+            label: btn.label || `Button ${idx + 1}`,
+            url: processedUrl,
+            isExternal: true,
+          })
+        }
+      }
+    )
+  }
+
+  // 2. Add all connected options from node.options
+  if (props.node.options?.length) {
+    props.node.options.forEach((opt: CourseNodeOption) => {
+      let btnIdx = -1
+
+      let label = opt.label
+      if (label?.startsWith('menu-btn-')) {
+        btnIdx = parseInt(label.replace('menu-btn-', ''))
+
+        // Skip if this option was already rendered as an external button
+        if (externalButtonIndices.has(btnIdx)) {
+          return
+        }
+
+        const btnConf = props.node?.content?.buttons?.[btnIdx]
+        if (typeof btnConf === 'string') {
+          label = btnConf
+        } else if (typeof btnConf === 'object' && btnConf.label) {
+          label = btnConf.label
+        }
+      }
+
+      buttons.push({
+        id: `opt-${opt.id || opt.next_node_id}`,
+        // We use empty string if we want fallback translation downstream
+        label: label || '',
+        next_node_id: opt.next_node_id,
+        isExternal: false,
+      })
+    })
+  }
+
+  return buttons
+})
+
+const handleExternalClick = (url?: string) => {
+  if (url && url !== '#') {
+    let finalUrl = url
+    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+      finalUrl = 'https://' + finalUrl
+    }
+    window.open(finalUrl, '_blank')
+  }
+}
+
 const menuGridClasses = computed(() => {
-  const count = props.node?.options?.length || 0
+  const count = displayButtons.value.length
   if (count === 0) return ''
 
   const base = Math.min(count, 2)
@@ -384,6 +503,7 @@ const handleVideoLoad = (event: Event) => {
 }
 </script>
 
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div
     v-if="!node"
@@ -444,14 +564,14 @@ const handleVideoLoad = (event: Event) => {
         </div>
       </div>
 
-      <!-- Description Section -->
       <div
         v-if="node.content?.description && node.show_description !== false"
         class="px-2 md:px-3 lg:px-12 pt-1 text-sm md:text-base prose max-w-none flex-1"
       >
-        <div class="text-slate-600 leading-relaxed whitespace-pre-wrap">
-          {{ node.content.description }}
-        </div>
+        <div
+          class="text-slate-600 leading-relaxed rich-content"
+          v-html="processedDescription"
+        />
       </div>
     </div>
 
@@ -462,10 +582,9 @@ const handleVideoLoad = (event: Event) => {
     >
       <div
         v-if="node.content?.description && node.show_description !== false"
-        class="w-full max-w-md px-8 pt-8 text-center text-slate-600 whitespace-pre-wrap leading-relaxed"
-      >
-        {{ node.content.description }}
-      </div>
+        class="w-full max-w-md px-8 pt-8 text-center text-slate-600 leading-relaxed"
+        v-html="processedDescription"
+      />
       <div class="max-w-md mx-auto w-full">
         <div class="px-8 py-10">
           <h2 class="text-3xl font-bold text-slate-800 mb-8 text-center">
@@ -631,9 +750,10 @@ const handleVideoLoad = (event: Event) => {
         v-if="node.content?.description && node.show_description !== false"
         class="p-8 prose max-w-none"
       >
-        <div class="text-slate-600 leading-relaxed whitespace-pre-wrap">
-          {{ node.content.description }}
-        </div>
+        <div
+          class="text-slate-600 leading-relaxed rich-content"
+          v-html="processedDescription"
+        />
       </div>
     </div>
 
@@ -655,23 +775,22 @@ const handleVideoLoad = (event: Event) => {
       ]"
     >
       <div
-        v-if="!node.is_end && node.options?.length > 0"
+        v-if="displayButtons.length > 0"
         :class="[
           'w-full max-w-6xl grid gap-3 md:gap-4',
           node.type === 'menu' ? menuGridClasses : 'max-w-sm flex flex-col',
         ]"
       >
         <BaseButton
-          v-for="option in node.options"
-          :key="option.id"
-          :text="
-            (option.label?.startsWith('menu-btn-')
-              ? node.content?.buttons?.[
-                  parseInt(option.label.replace('menu-btn-', ''))
-                ]
-              : option.label) || $t('course.continue')
+          v-for="btn in displayButtons"
+          :key="btn.id"
+          :text="btn.label || $t('course.continue')"
+          :action="
+            () =>
+              btn.isExternal
+                ? handleExternalClick(btn.url)
+                : handleNavigate(btn.next_node_id || null)
           "
-          :action="() => handleNavigate(option.next_node_id)"
           class="shadow-lg h-full w-full"
           :extra-props="{ loading: loading }"
         />

@@ -36,10 +36,16 @@ export interface CourseNodeField {
   icon?: string
 }
 
+export interface MenuButton {
+  label: string
+  url?: string
+  is_external?: boolean
+}
+
 export interface NodeContent {
   description?: string
   fields?: CourseNodeField[]
-  buttons?: string[]
+  buttons?: (string | MenuButton)[]
   body?: string
   submit_label?: string
 }
