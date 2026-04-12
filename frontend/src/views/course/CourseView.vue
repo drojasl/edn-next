@@ -25,7 +25,115 @@ const loading = ref(false)
 const formSubmitting = ref(false)
 const formData = reactive<Record<string, string | boolean>>({})
 
+const trackNode = async (nodeId: number) => {
+  // Check if already seen on this device to avoid double counting (as requested)
+  const seenNodesRaw = localStorage.getItem('seen_nodes')
+  const seenNodes: number[] = seenNodesRaw ? JSON.parse(seenNodesRaw) : []
+
+  if (seenNodes.includes(nodeId)) {
+    return
+  }
+
+  const accessDataRaw = localStorage.getItem('course_access')
+  let code = ''
+  if (accessDataRaw) {
+    try {
+      const accessData = JSON.parse(accessDataRaw)
+      code = accessData.accessCode
+    } catch (e) {
+      console.error('Error reading access code', e)
+    }
+  }
+
+  if (!code) return
+
+  const sessionId = localStorage.getItem('prospect_session_id')
+  const email = localStorage.getItem('prospect_email')
+
+  const result = await apiRequest({
+    method: 'POST',
+    url: '/v1/public/prospect/track-node',
+    body: {
+      code,
+      node_id: nodeId,
+      session_id: sessionId,
+      email: email || null,
+    },
+  })
+
+  if (result.success) {
+    seenNodes.push(nodeId)
+    localStorage.setItem('seen_nodes', JSON.stringify(seenNodes))
+  }
+}
+
+const syncProgressWithBackend = async (
+  data: Record<string, string | boolean>
+) => {
+  // 1. Recopilar progreso de localStorage
+  const progress: Record<string, number> = {}
+  const historyRaw = localStorage.getItem('course_history')
+  const history: string[] = historyRaw ? JSON.parse(historyRaw) : []
+
+  history.forEach((slug) => {
+    const saved = localStorage.getItem(`course_progress_${slug}`)
+    if (saved) {
+      progress[slug] = parseInt(saved, 10)
+    }
+  })
+
+  // Cursos completados
+  const completedRaw = localStorage.getItem('completed_courses')
+  const completed: string[] = completedRaw ? JSON.parse(completedRaw) : []
+
+  // Obtener código de acceso
+  const accessDataRaw = localStorage.getItem('course_access')
+  let code = ''
+  if (accessDataRaw) {
+    try {
+      const accessData = JSON.parse(accessDataRaw)
+      code = accessData.accessCode
+    } catch (e) {
+      console.error('Error reading access code from localStorage', e)
+    }
+  }
+
+  if (!code) {
+    console.error('No access code found in localStorage. Cannot sync.')
+    return null
+  }
+
+  // 2. Build a clean prospect payload (known prospect fields only)
+  const prospectPayload: Record<string, unknown> = {
+    code,
+    progress, // always send as object, even if empty {}
+    completed,
+    session_id: localStorage.getItem('prospect_session_id'),
+  }
+  const knownProspectFields = [
+    'name',
+    'email',
+    'phone',
+    'city',
+    'country',
+    'amway_code',
+  ]
+  knownProspectFields.forEach((key) => {
+    if (data[key] !== undefined && data[key] !== '') {
+      prospectPayload[key] = data[key]
+    }
+  })
+
+  return await apiRequest({
+    method: 'POST',
+    url: '/v1/public/prospect/sync',
+    body: prospectPayload,
+  })
+}
+
 // Initialize formData when node changes
+// NOTE: watch must come AFTER trackNode to avoid TDZ (Temporal Dead Zone) errors
+// since { immediate: true } fires synchronously during setup.
 watch(
   () => props.node,
   (newNode) => {
@@ -44,6 +152,7 @@ watch(
   },
   { immediate: true }
 )
+
 const isFormValid = computed(() => {
   if (props.node?.type !== 'form') return true
 
@@ -119,112 +228,6 @@ const isFormValid = computed(() => {
 
   return true
 })
-
-const syncProgressWithBackend = async (
-  data: Record<string, string | boolean>
-) => {
-  // 1. Recopilar progreso de localStorage
-  const progress: Record<string, number> = {}
-  const historyRaw = localStorage.getItem('course_history')
-  const history: string[] = historyRaw ? JSON.parse(historyRaw) : []
-
-  history.forEach((slug) => {
-    const saved = localStorage.getItem(`course_progress_${slug}`)
-    if (saved) {
-      progress[slug] = parseInt(saved, 10)
-    }
-  })
-
-  // Cursos completados
-  const completedRaw = localStorage.getItem('completed_courses')
-  const completed: string[] = completedRaw ? JSON.parse(completedRaw) : []
-
-  // Obtener código de acceso
-  const accessDataRaw = localStorage.getItem('course_access')
-  let code = ''
-  if (accessDataRaw) {
-    try {
-      const accessData = JSON.parse(accessDataRaw)
-      code = accessData.accessCode
-    } catch (e) {
-      console.error('Error reading access code from localStorage', e)
-    }
-  }
-
-  if (!code) {
-    console.error('No access code found in localStorage. Cannot sync.')
-    return null
-  }
-
-  // 2. Build a clean prospect payload (known prospect fields only)
-  const prospectPayload: Record<string, unknown> = {
-    code,
-    progress, // always send as object, even if empty {}
-    completed,
-    session_id: localStorage.getItem('prospect_session_id'),
-  }
-  const knownProspectFields = [
-    'name',
-    'email',
-    'phone',
-    'city',
-    'country',
-    'amway_code',
-  ]
-  knownProspectFields.forEach((key) => {
-    if (data[key] !== undefined && data[key] !== '') {
-      prospectPayload[key] = data[key]
-    }
-  })
-
-  return await apiRequest({
-    method: 'POST',
-    url: '/v1/public/prospect/sync',
-    body: prospectPayload,
-  })
-}
-
-const trackNode = async (nodeId: number) => {
-  // Check if already seen on this device to avoid double counting (as requested)
-  const seenNodesRaw = localStorage.getItem('seen_nodes')
-  const seenNodes: number[] = seenNodesRaw ? JSON.parse(seenNodesRaw) : []
-
-  if (seenNodes.includes(nodeId)) {
-    return
-  }
-
-  const accessDataRaw = localStorage.getItem('course_access')
-  let code = ''
-  if (accessDataRaw) {
-    try {
-      const accessData = JSON.parse(accessDataRaw)
-      code = accessData.accessCode
-    } catch (e) {
-      console.error('Error reading access code', e)
-    }
-  }
-
-  if (!code) return
-
-  const sessionId = localStorage.getItem('prospect_session_id')
-  const email = localStorage.getItem('prospect_email')
-
-  const result = await apiRequest({
-    method: 'POST',
-    url: '/v1/public/prospect/track-node',
-    body: {
-      code,
-      node_id: nodeId,
-      session_id: sessionId,
-      email: email || null,
-    },
-  })
-
-  if (result.success) {
-    seenNodes.push(nodeId)
-    localStorage.setItem('seen_nodes', JSON.stringify(seenNodes))
-  }
-}
 
 const handleFormSubmit = async () => {
   if (!isFormValid.value) return
