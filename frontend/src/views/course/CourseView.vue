@@ -293,27 +293,43 @@ const handleFormSubmit = async () => {
   }
 }
 
-const handleNavigate = (nextNodeId: number | null) => {
-  if (!nextNodeId) {
-    console.warn('No next node ID provided')
+const handleNavigate = async (
+  nextNodeId: number | null,
+  replace: boolean = false
+) => {
+  if (!nextNodeId || loading.value) {
     return
   }
 
   loading.value = true
-  const entrepreneurSlug = route.params.entrepreneurSlug as string
-  const courseSlug = route.params.courseSlug as string
+  try {
+    const entrepreneurSlug = route.params.entrepreneurSlug as string
+    const courseSlug = route.params.courseSlug as string
+    const nextNode = props.course?.nodes?.find(
+      (n: CourseNodeData) => n.id === nextNodeId
+    )
 
-  const nextNode = props.course?.nodes?.find(
-    (n: CourseNodeData) => n.id === nextNodeId
-  )
+    if (nextNode) {
+      // Preserve current query parameters (like ?cod=...)
+      const targetUrl = {
+        path: `/cursos/${entrepreneurSlug}/${courseSlug}/${nextNode.slug}`,
+        query: route.query,
+      }
 
-  if (nextNode) {
-    router.push(`/cursos/${entrepreneurSlug}/${courseSlug}/${nextNode.slug}`)
-  } else {
-    console.error('Next node not found in course data')
+      // Only navigate if we are truly moving to a different path
+      if (route.path !== targetUrl.path) {
+        if (replace) {
+          await router.replace(targetUrl)
+        } else {
+          await router.push(targetUrl)
+        }
+      }
+    } else {
+      console.error('Next node not found in course data')
+    }
+  } finally {
+    loading.value = false
   }
-
-  loading.value = false
 }
 
 interface DisplayButton {
@@ -419,27 +435,29 @@ const menuGridClasses = computed(() => {
   return `grid-cols-${base} md:grid-cols-${md} lg:grid-cols-${lg}`
 })
 
-const handleContinue = () => {
+const handleContinue = async () => {
+  if (loading.value) return
+
   if (props.node?.is_end) {
     if (props.course?.next_course?.slug) {
       loading.value = true
-      const entrepreneurSlug = route.params.entrepreneurSlug
-      const nextCourseSlug = props.course.next_course.slug
-
-      // Update localStorage to allow access to next course
-      const accessData = localStorage.getItem('course_access')
-      if (accessData) {
-        try {
+      try {
+        const entrepreneurSlug = route.params.entrepreneurSlug
+        const nextCourseSlug = props.course.next_course.slug
+        const accessData = localStorage.getItem('course_access')
+        if (accessData) {
           const parsed = JSON.parse(accessData)
           parsed.courseSlug = nextCourseSlug
           localStorage.setItem('course_access', JSON.stringify(parsed))
-        } catch (e) {
-          console.error('Error updating access data', e)
         }
-      }
 
-      router.push(`/cursos/${entrepreneurSlug}/${nextCourseSlug}`)
-      loading.value = false
+        await router.replace({
+          path: `/cursos/${entrepreneurSlug}/${nextCourseSlug}`,
+          query: route.query,
+        })
+      } finally {
+        loading.value = false
+      }
     } else {
       console.log('Course completed')
     }
@@ -449,7 +467,7 @@ const handleContinue = () => {
   // Find next node ID from options (defaulting to first one if used via generic button)
   const nextNodeId = props.node?.options?.[0]?.next_node_id
   if (nextNodeId) {
-    handleNavigate(nextNodeId)
+    await handleNavigate(nextNodeId)
   } else {
     console.warn('No next node found in options')
   }

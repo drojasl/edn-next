@@ -26,7 +26,7 @@ const getSessionId = () => {
 }
 
 const handleSubmit = async () => {
-  if (!accessCode.value) return
+  if (!accessCode.value || loading.value) return
   loading.value = true
   errorMessage.value = ''
 
@@ -56,7 +56,7 @@ const handleSubmit = async () => {
     )
 
     // Redirect to the course
-    router.push(`/cursos/${entrepreneurSlug}/${courseSlug}`)
+    router.replace(`/cursos/${entrepreneurSlug}/${courseSlug}`)
   } else {
     console.error('Validation error:', result.error)
     const status = result.error?.code
@@ -160,7 +160,6 @@ onMounted(() => {
 
           <BaseButton
             :text="t('landing.button')"
-            :action="handleSubmit"
             :extra-props="{
               disabled: !accessCode,
               loading: loading,

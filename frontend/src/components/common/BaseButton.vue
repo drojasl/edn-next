@@ -38,7 +38,7 @@ const handleClick = () => {
         : '',
     ]"
     :disabled="extraProps?.disabled || extraProps?.loading"
-    @click="handleClick"
+    @click.stop="handleClick"
   >
     <span v-if="!extraProps?.loading">{{ text }}</span>
     <span v-else class="flex items-center">

@@ -310,7 +310,14 @@
                 "menu_buttons_title": "Botones del Menú",
                 "menu_no_buttons": "No hay botones. Haz clic en \"+ Agregar Botón\" para comenzar.",
                 "selected": "Seleccionados",
-                "success": "Curso creado exitosamente."
+                "success": "Curso creado exitosamente.",
+                "opens_in_new_tab": "Se abre en pestaña nueva",
+                "variables_label": "Variables",
+                "variables": {
+                    "abo_link": "ABO LINK",
+                    "client_link": "CLIENT LINK",
+                    "my_store_link": "MY STORE LINK"
+                }
             }
         },
         "management": {
@@ -359,7 +366,7 @@
             "title": "Retomar Progreso",
             "subtitle": "Ingresa el correo que usaste anteriormente para recuperar tu avance.",
             "email_label": "Correo Electrónico",
-            "email_placeholder": "ejemplo@correo.com",
+            "email_placeholder": "ejemplo{'@'}correo.com",
             "error_not_found": "No se encontró progreso para este correo.",
             "error_no_code": "Código de acceso no encontrado."
         }

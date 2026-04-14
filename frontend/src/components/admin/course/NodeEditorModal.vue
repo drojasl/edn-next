@@ -698,21 +698,37 @@ defineExpose({ open, close })
                                 class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] tracking-wide transition-colors"
                                 @click="btn.url = '{{ ABO_LINK }}'"
                               >
-                                <span v-pre>ABO LINK</span>
+                                <span>
+                                  {{
+                                    t('course.editor.modal.variables.abo_link')
+                                  }}
+                                </span>
                               </button>
                               <button
                                 type="button"
                                 class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] tracking-wide transition-colors"
                                 @click="btn.url = '{{ CLIENT_LINK }}'"
                               >
-                                <span v-pre>CLIENT LINK</span>
+                                <span>
+                                  {{
+                                    t(
+                                      'course.editor.modal.variables.client_link'
+                                    )
+                                  }}
+                                </span>
                               </button>
                               <button
                                 type="button"
                                 class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] tracking-wide transition-colors"
                                 @click="btn.url = '{{ MY_STORE_LINK }}'"
                               >
-                                <span v-pre>MY STORE LINK</span>
+                                <span>
+                                  {{
+                                    t(
+                                      'course.editor.modal.variables.my_store_link'
+                                    )
+                                  }}
+                                </span>
                               </button>
                             </div>
                           </div>

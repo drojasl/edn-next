@@ -75,7 +75,20 @@ const goToCourse = (c: StartedCourse) => {
       console.error(e)
     }
   }
-  router.push(c.url)
+
+  const targetUrl = {
+    path: c.url,
+    query: route.query,
+  }
+
+  // If we are already in the same course, we use replace to avoid duplicate history entry
+  // especially if navigating back to the start node of the same course
+  if (courseSlug.value === c.slug && route.path !== c.url) {
+    router.replace(targetUrl)
+  } else if (courseSlug.value !== c.slug) {
+    router.push(targetUrl)
+  }
+
   if (isSidebarOpen.value) toggleSidebar()
 }
 const isLoading = ref(true)
@@ -102,7 +115,7 @@ const toggleSidebar = () => {
 watch(
   () => route.params.nodeSlug,
   (newNodeSlug) => {
-    if (newNodeSlug) {
+    if (newNodeSlug && newNodeSlug !== selectedNodeSlug.value) {
       selectedNodeSlug.value = newNodeSlug as string
       if (courseData.value?.nodes) {
         const node = courseData.value.nodes.find(
@@ -126,6 +139,13 @@ const activeNode = computed(() => {
 watch(
   activeNode,
   (node) => {
+    // Actualizar título de la página para el historial del navegador
+    if (node && courseData.value) {
+      document.title = `${(node as CourseNodeData).title} | ${courseData.value.title}`
+    } else if (courseData.value) {
+      document.title = courseData.value.title
+    }
+
     const n = node as CourseNodeData & { position: number }
     if (n && n.position > maxPositionReached.value) {
       maxPositionReached.value = n.position
@@ -200,17 +220,17 @@ const addToCourseHistory = (slug: string) => {
 }
 
 const initializeCourse = () => {
-  if (!validateAccess()) {
-    router.push('/cursos')
-    return
-  }
-
-  // Cargar historial y completados
+  // Cargar historial y completados PRIMERO para que validateAccess pueda usarlos
   const history = localStorage.getItem('course_history')
   if (history) courseHistory.value = JSON.parse(history)
 
   const completed = localStorage.getItem('completed_courses')
   if (completed) completedCourses.value = JSON.parse(completed)
+
+  if (!validateAccess()) {
+    router.replace('/cursos')
+    return
+  }
 
   // Asegurar que el curso actual esté en el historial
   addToCourseHistory(courseSlug.value)
@@ -272,16 +292,18 @@ const fetchCourseData = async () => {
       const startNode = courseData.value.nodes.find(
         (n: CourseNodeData) => n.is_start
       )
-      if (startNode) {
-        router.replace(
-          `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${startNode.slug}`
-        )
+      if (startNode && route.params.nodeSlug !== startNode.slug) {
+        router.replace({
+          path: `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${startNode.slug}`,
+          query: route.query,
+        })
       } else {
         const firstNode = courseData.value?.nodes?.[0]
         if (firstNode) {
-          router.replace(
-            `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${firstNode.slug}`
-          )
+          router.replace({
+            path: `/cursos/${entrepreneurSlug.value}/${courseSlug.value}/${firstNode.slug}`,
+            query: route.query,
+          })
         }
       }
     }
@@ -292,18 +314,36 @@ const fetchCourseData = async () => {
 }
 
 const validateAccess = () => {
-  const accessData = localStorage.getItem('course_access')
-  if (!accessData) {
+  const accessDataRaw = localStorage.getItem('course_access')
+  if (!accessDataRaw) {
     return false
   }
 
   try {
+    const accessData = JSON.parse(accessDataRaw)
     const { entrepreneurSlug: storedEntrepreneur, courseSlug: storedCourse } =
-      JSON.parse(accessData)
-    return (
+      accessData
+
+    // Caso 1: Coincidencia directa
+    if (
       storedEntrepreneur === entrepreneurSlug.value &&
       storedCourse === courseSlug.value
-    )
+    ) {
+      return true
+    }
+
+    // Caso 2: El curso está en el historial (el usuario está volviendo atrás o navegando entre sus cursos)
+    if (
+      storedEntrepreneur === entrepreneurSlug.value &&
+      courseHistory.value.includes(courseSlug.value)
+    ) {
+      // Sincronizamos el course_access para que coincida con la URL actual
+      accessData.courseSlug = courseSlug.value
+      localStorage.setItem('course_access', JSON.stringify(accessData))
+      return true
+    }
+
+    return false
   } catch (e) {
     return false
   }
@@ -733,6 +773,7 @@ const getFullUrl = (path: string | null) => {
           class="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col border border-slate-200/50 flex-1"
         >
           <router-view
+            :key="route.path"
             :node="activeNode"
             :course="courseData"
             :entrepreneur="entrepreneurData"

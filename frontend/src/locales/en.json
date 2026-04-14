@@ -309,7 +309,14 @@
                 "menu_buttons_title": "Menu Buttons",
                 "menu_no_buttons": "No buttons yet. Click \"+ Add Button\" to start.",
                 "selected": "Selected",
-                "success": "Course created successfully."
+                "success": "Course created successfully.",
+                "opens_in_new_tab": "Opens in new tab",
+                "variables_label": "Variables",
+                "variables": {
+                    "abo_link": "ABO LINK",
+                    "client_link": "CLIENT LINK",
+                    "my_store_link": "MY STORE LINK"
+                }
             }
         },
         "management": {
@@ -358,7 +365,7 @@
             "title": "Resume Progress",
             "subtitle": "Enter the email you used previously to recover your progress.",
             "email_label": "Email Address",
-            "email_placeholder": "example@email.com",
+            "email_placeholder": "example{'@'}email.com",
             "error_not_found": "No progress found for this email.",
             "error_no_code": "Access code not found."
         }
