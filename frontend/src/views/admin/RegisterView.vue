@@ -3,10 +3,11 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import EntrepreneurForm from '../../components/admin/user/EntrepreneurForm.vue'
+import LanguageSwitcher from '../../components/common/LanguageSwitcher.vue'
 
 import { type User, type ApiError } from '../../types'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
 
 const loading = ref(false)
@@ -21,6 +22,7 @@ const handleRegister = async (formData: User) => {
     const userData = {
       ...formData,
       codigo_amway: formData.codigo_amway, // Maintain consistency with User interface
+      locale: locale.value,
     }
 
     await authStore.register(userData)
@@ -37,8 +39,13 @@ const handleRegister = async (formData: User) => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12"
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12 relative"
   >
+    <!-- Language Switcher -->
+    <div class="absolute top-6 right-6">
+      <LanguageSwitcher />
+    </div>
+
     <div class="w-full max-w-2xl">
       <!-- Register Card -->
       <div class="bg-white rounded-2xl shadow-xl p-8 md:p-10">

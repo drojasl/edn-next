@@ -11,6 +11,11 @@ use App\Http\Controllers\Api\Public\CourseController;
 Route::post('/auth/login', [LoginController::class, 'login']);
 Route::post('/auth/validate-slug', [\App\Http\Controllers\Api\Admin\EntrepreneurController::class, 'validateSlug']);
 
+// Password reset
+Route::post('/auth/forgot-password', [\App\Http\Controllers\Auth\PasswordResetController::class, 'sendResetLink']);
+Route::post('/auth/reset-password', [\App\Http\Controllers\Auth\PasswordResetController::class, 'resetPassword']);
+
+
 // Public Course API (for Prospects)
 Route::prefix('v1/public')->group(function () {
     Route::post('/access-codes/validate', [App\Http\Controllers\Api\Public\PublicAccessController::class, 'validateCode']);
@@ -58,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Prospects
         Route::get('prospects', [\App\Http\Controllers\Api\Admin\ProspectController::class, 'index']);
         Route::patch('prospects/{prospect}/toggle-review', [\App\Http\Controllers\Api\Admin\ProspectController::class, 'toggleReview']);
+        Route::delete('prospects/{prospect}', [\App\Http\Controllers\Api\Admin\ProspectController::class, 'destroy']);
 
         // Stats
         Route::get('stats/funnel', [\App\Http\Controllers\Api\Admin\AdminStatsController::class, 'funnel']);

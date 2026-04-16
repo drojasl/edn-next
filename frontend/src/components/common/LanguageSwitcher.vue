@@ -15,15 +15,13 @@ const switchLanguage = (lang: string) => {
 </script>
 
 <template>
-  <div
-    class="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-1 flex shadow-xl"
-  >
+  <div class="bg-white border border-gray-200 rounded-xl p-1 flex shadow-sm">
     <button
       :class="[
-        'px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300',
+        'px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300',
         currentLanguage === 'es'
-          ? 'bg-white text-slate-900 shadow-lg'
-          : 'text-white/60 hover:text-white',
+          ? 'bg-indigo-600 text-white shadow-md'
+          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
       ]"
       @click="switchLanguage('es')"
     >
@@ -31,10 +29,10 @@ const switchLanguage = (lang: string) => {
     </button>
     <button
       :class="[
-        'px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300',
+        'px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300',
         currentLanguage === 'en'
-          ? 'bg-white text-slate-900 shadow-lg'
-          : 'text-white/60 hover:text-white',
+          ? 'bg-indigo-600 text-white shadow-md'
+          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
       ]"
       @click="switchLanguage('en')"
     >

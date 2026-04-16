@@ -42,4 +42,18 @@ class ProspectController extends Controller
 
         return response()->json($prospect);
     }
+
+    public function destroy(Request $request, Prospect $prospect)
+    {
+        $user = $request->user();
+
+        // Ensure the prospect belongs to the user
+        if ($prospect->accessCode->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $prospect->delete();
+
+        return response()->json(['message' => 'Prospect deleted successfully']);
+    }
 }

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/auth'
 import BaseButton from '../../components/common/BaseButton.vue'
+import LanguageSwitcher from '../../components/common/LanguageSwitcher.vue'
 import type { ApiError } from '../../types'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 // Form data
@@ -20,14 +21,6 @@ const errors = ref({
   codigoAmway: '',
   password: '',
 })
-
-// Language switcher
-const currentLanguage = computed(() => locale.value)
-
-const switchLanguage = (lang: string) => {
-  locale.value = lang
-  localStorage.setItem('locale', lang)
-}
 
 // Form validation
 const validateForm = (): boolean => {
@@ -91,30 +84,7 @@ const handleLogin = async () => {
     <div class="w-full max-w-md">
       <!-- Language Switcher -->
       <div class="flex justify-end mb-4">
-        <div class="inline-flex rounded-lg border border-gray-300 bg-white p-1">
-          <button
-            :class="[
-              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              currentLanguage === 'es'
-                ? 'bg-indigo-600 text-white'
-                : 'text-gray-700 hover:bg-gray-100',
-            ]"
-            @click="switchLanguage('es')"
-          >
-            ES
-          </button>
-          <button
-            :class="[
-              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              currentLanguage === 'en'
-                ? 'bg-indigo-600 text-white'
-                : 'text-gray-700 hover:bg-gray-100',
-            ]"
-            @click="switchLanguage('en')"
-          >
-            EN
-          </button>
-        </div>
+        <LanguageSwitcher />
       </div>
 
       <!-- Login Card -->
@@ -193,6 +163,16 @@ const handleLogin = async () => {
             <p v-if="errors.password" class="mt-1 text-sm text-red-600">
               {{ errors.password }}
             </p>
+          </div>
+
+          <!-- Forgot Password Link -->
+          <div class="flex justify-end">
+            <router-link
+              to="/admin/forgot-password"
+              class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+            >
+              {{ t('auth.login.forgotPassword') }}
+            </router-link>
           </div>
 
           <!-- Submit Button -->

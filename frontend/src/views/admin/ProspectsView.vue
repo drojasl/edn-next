@@ -4,13 +4,15 @@ import { useI18n } from 'vue-i18n'
 import { apiRequest } from '../../api/apiClient'
 import AdminPageHeader from '../../components/admin/AdminPageHeader.vue'
 import AdminDataTable from '../../components/admin/AdminDataTable.vue'
-
+import ConfirmationModal from '../../components/common/ConfirmationModal.vue'
 import { type Prospect, type ApiError } from '../../types'
 
 const prospects = ref<Prospect[]>([])
 const isLoading = ref(true)
-const activeMenuId = ref<number | null>(null)
 const { t, locale } = useI18n()
+const confirmDeleteModal = ref<InstanceType<typeof ConfirmationModal> | null>(
+  null
+)
 
 const fetchProspects = async () => {
   isLoading.value = true
@@ -40,9 +42,29 @@ const toggleReview = async (prospect: Prospect) => {
     }
   } catch (error: unknown) {
     console.error('Error toggling review status:', error as ApiError)
-  } finally {
-    activeMenuId.value = null
   }
+}
+
+const deleteProspect = (prospect: Prospect) => {
+  confirmDeleteModal.value?.open({
+    title: t('admin.prospects.table.delete'),
+    message: t('admin.prospects.table.delete_confirm'),
+    isDestructive: true,
+    confirmText: t('admin.prospects.table.delete'),
+    onConfirm: async () => {
+      try {
+        const response = await apiRequest({
+          method: 'DELETE',
+          url: `/v1/admin/prospects/${prospect.id}`,
+        })
+        if (response.success) {
+          prospects.value = prospects.value.filter((p) => p.id !== prospect.id)
+        }
+      } catch (error: unknown) {
+        console.error('Error deleting prospect:', error as ApiError)
+      }
+    },
+  })
 }
 
 const formatDate = (dateString: string) => {
@@ -99,23 +121,13 @@ const exportCSV = () => {
   document.body.removeChild(link)
 }
 
-const toggleMenu = (id: number) => {
-  if (activeMenuId.value === id) {
-    activeMenuId.value = null
-  } else {
-    activeMenuId.value = id
-  }
-}
-
-// Close menu on click outside could be added here, but keeping it simple with the button toggle
-
 onMounted(() => {
   fetchProspects()
 })
 </script>
 
 <template>
-  <div @click="activeMenuId = null">
+  <div>
     <AdminPageHeader
       :title="$t('admin.prospects.title')"
       :description="$t('admin.prospects.description')"
@@ -221,42 +233,25 @@ onMounted(() => {
         >
           {{ formatDate(prospect.created_at) }}
         </td>
-        <td class="px-6 py-4 text-right relative whitespace-nowrap">
-          <button
-            class="text-slate-400 hover:text-indigo-600 transition-colors p-1"
-            @click.stop="toggleMenu(prospect.id)"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-              />
-            </svg>
-          </button>
-
-          <!-- Dropdown Menu -->
-          <div
-            v-if="activeMenuId === prospect.id"
-            class="absolute right-6 top-10 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-[100] py-2"
-          >
+        <td class="px-6 py-4 text-right whitespace-nowrap">
+          <div class="flex items-center justify-end gap-2">
+            <!-- Toggle Review Button -->
             <button
-              class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition-colors flex items-center gap-2"
-              :class="
+              class="p-2 rounded-lg transition-all"
+              :class="[
                 prospect.is_reviewed
-                  ? 'text-slate-600'
-                  : 'text-indigo-600 font-semibold'
+                  ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  : 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100/50',
+              ]"
+              :title="
+                prospect.is_reviewed
+                  ? $t('admin.prospects.table.mark_new')
+                  : $t('admin.prospects.table.mark_reviewed')
               "
               @click.stop="toggleReview(prospect)"
             >
               <svg
-                class="w-4 h-4"
+                class="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -266,7 +261,14 @@ onMounted(() => {
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  v-if="prospect.is_reviewed"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                 />
                 <path
                   v-else
@@ -276,15 +278,33 @@ onMounted(() => {
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              {{
-                prospect.is_reviewed
-                  ? $t('admin.prospects.table.mark_new')
-                  : $t('admin.prospects.table.mark_reviewed')
-              }}
+            </button>
+
+            <!-- Delete Button -->
+            <button
+              class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all font-medium"
+              :title="$t('admin.prospects.table.delete')"
+              @click.stop="deleteProspect(prospect)"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
             </button>
           </div>
         </td>
       </tr>
     </AdminDataTable>
+
+    <ConfirmationModal ref="confirmDeleteModal" />
   </div>
 </template>

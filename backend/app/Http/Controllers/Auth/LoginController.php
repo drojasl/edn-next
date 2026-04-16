@@ -37,12 +37,14 @@ class LoginController extends Controller
             'token' => $token,
             'user' => [
                 'id' => $user->id,
-                'amway_code' => $user->amway_code,
+                'codigo_amway' => $user->codigo_amway,
                 'is_account_holder' => $user->is_account_holder,
                 'name' => $user->name,
                 'last_name' => $user->last_name,
+                'email' => $user->email,
                 'slug' => $user->slug,
             ]
         ]);
+
     }
 }

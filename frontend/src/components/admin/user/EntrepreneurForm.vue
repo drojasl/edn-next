@@ -47,14 +47,29 @@ const manualSlug = ref(false)
 // Populate initial data if editing
 onMounted(() => {
   if (props.initialData) {
-    form.value = { ...form.value, ...props.initialData }
-    if (props.initialData.social_links) {
-      form.value.social_links = [...props.initialData.social_links]
-    }
-    form.value.password = '' // Clear password field for security
-    manualSlug.value = true // Don't auto-generate if we have data
+    populateForm(props.initialData)
   }
 })
+
+// Watch for initialData changes (useful when data is fetched async)
+watch(
+  () => props.initialData,
+  (newData) => {
+    if (newData) {
+      populateForm(newData)
+    }
+  },
+  { deep: true }
+)
+
+const populateForm = (data: User) => {
+  form.value = { ...form.value, ...data }
+  if (data.social_links) {
+    form.value.social_links = [...data.social_links]
+  }
+  form.value.password = '' // Clear password field for security
+  manualSlug.value = true // Don't auto-generate if we have data
+}
 
 // Social Links Logic
 const currentPlatform = ref('whatsapp')

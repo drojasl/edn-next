@@ -27,7 +27,7 @@ class AuthController extends Controller
             'slug' => 'nullable|string|max:255|unique:users',
         ]);
 
-        $entrepreneur = $this->authService->register($validated);
+        $entrepreneur = $this->authService->register($validated, $request->get('locale'));
 
         return response()->json([
             'message' => 'Entrepreneur registered successfully',

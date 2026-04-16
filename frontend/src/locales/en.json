@@ -10,8 +10,23 @@
             "submit": "Sign In",
             "loading": "Signing in...",
             "noAccount": "Don't have an account?",
-            "register": "Register here"
+            "register": "Register here",
+            "forgotPassword": "Forgot your password?"
         },
+        "forgotPassword": {
+            "title": "Recover Password",
+            "subtitle": "Enter your email and we'll send you a link to reset your password.",
+            "submit": "Send Link",
+            "backToLogin": "Back to login",
+            "success": "A recovery link has been sent to your email."
+        },
+        "resetPassword": {
+            "title": "New Password",
+            "subtitle": "Enter your new password to access your account.",
+            "submit": "Reset Password",
+            "success": "Your password has been successfully updated."
+        },
+
         "register": {
             "title": "Entrepreneur Registration",
             "subtitle": "Create your account to start managing your courses",
@@ -67,7 +82,7 @@
                 "title": "Contact Information and Social Networks",
                 "add_label": "Platform",
                 "value_placeholder": "Username or Phone",
-                "error_url": "Please use only the username (@name) or phone, not the full URL.",
+                "error_url": "Please use only the username ({'@'}name) or phone, not the full URL.",
                 "platforms": {
                     "cell_phone": {
                         "label": "Cell Phone",
@@ -79,23 +94,23 @@
                     },
                     "telegram": {
                         "label": "Telegram",
-                        "placeholder": "Ex: @user or +1234..."
+                        "placeholder": "Ex: {'@'}user or +1234..."
                     },
                     "instagram": {
                         "label": "Instagram",
-                        "placeholder": "Ex: @user"
+                        "placeholder": "Ex: {'@'}user"
                     },
                     "facebook": {
                         "label": "Facebook",
-                        "placeholder": "Ex: @user or pagename"
+                        "placeholder": "Ex: {'@'}user or pagename"
                     },
                     "tiktok": {
                         "label": "TikTok",
-                        "placeholder": "Ex: @user"
+                        "placeholder": "Ex: {'@'}user"
                     },
                     "youtube": {
                         "label": "YouTube",
-                        "placeholder": "Ex: @channel"
+                        "placeholder": "Ex: {'@'}channel"
                     }
                 },
                 "add_button": "Add Social Network"
@@ -179,7 +194,9 @@
                 "no_prospects": "No prospects registered yet.",
                 "unspecified": "Unspecified",
                 "mark_new": "Mark as new",
-                "mark_reviewed": "Mark as reviewed"
+                "mark_reviewed": "Mark as reviewed",
+                "delete": "Delete",
+                "delete_confirm": "Are you sure you want to delete this prospect? This action cannot be undone."
             },
             "csv": {
                 "filename": "prospects",

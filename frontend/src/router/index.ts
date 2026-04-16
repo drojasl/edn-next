@@ -39,6 +39,18 @@ const router = createRouter({
       component: () => import('../views/admin/RegisterView.vue'),
       meta: { guestOnly: true },
     },
+    {
+      path: '/admin/forgot-password',
+      name: 'forgot-password',
+      component: () => import('../views/admin/ForgotPassword.vue'),
+      meta: { guestOnly: true },
+    },
+    {
+      path: '/admin/reset-password',
+      name: 'reset-password',
+      component: () => import('../views/admin/ResetPassword.vue'),
+      meta: { guestOnly: true },
+    },
 
     // Admin Routes (Authenticated)
     {

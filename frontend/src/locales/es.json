@@ -10,8 +10,23 @@
             "submit": "Iniciar Sesión",
             "loading": "Iniciando sesión...",
             "noAccount": "¿No tienes una cuenta?",
-            "register": "Regístrate aquí"
+            "register": "Regístrate aquí",
+            "forgotPassword": "¿Olvidaste tu contraseña?"
         },
+        "forgotPassword": {
+            "title": "Recuperar Contraseña",
+            "subtitle": "Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.",
+            "submit": "Enviar Enlace",
+            "backToLogin": "Volver al inicio de sesión",
+            "success": "Se ha enviado un enlace de recuperación a tu correo."
+        },
+        "resetPassword": {
+            "title": "Nueva Contraseña",
+            "subtitle": "Ingresa tu nueva contraseña para acceder a tu cuenta.",
+            "submit": "Restablecer Contraseña",
+            "success": "Tu contraseña ha sido actualizada exitosamente."
+        },
+
         "register": {
             "title": "Registro de Empresario",
             "subtitle": "Crea tu cuenta para comenzar a gestionar tus cursos",
@@ -67,7 +82,7 @@
                 "title": "Datos de Contacto y Redes",
                 "add_label": "Plataforma",
                 "value_placeholder": "Usuario o Teléfono",
-                "error_url": "Por favor, usa solo el usuario (@nombre) o teléfono, no la URL completa.",
+                "error_url": "Por favor, usa solo el usuario ({'@'}nombre) o teléfono, no la URL completa.",
                 "platforms": {
                     "cell_phone": {
                         "label": "Celular",
@@ -79,23 +94,23 @@
                     },
                     "telegram": {
                         "label": "Telegram",
-                        "placeholder": "Ej: @usuario o +57300..."
+                        "placeholder": "Ej: {'@'}usuario o +57300..."
                     },
                     "instagram": {
                         "label": "Instagram",
-                        "placeholder": "Ej: @usuario"
+                        "placeholder": "Ej: {'@'}usuario"
                     },
                     "facebook": {
                         "label": "Facebook",
-                        "placeholder": "Ej: @usuario o nombre_de_pagina"
+                        "placeholder": "Ej: {'@'}usuario o nombre_de_pagina"
                     },
                     "tiktok": {
                         "label": "TikTok",
-                        "placeholder": "Ej: @usuario"
+                        "placeholder": "Ej: {'@'}usuario"
                     },
                     "youtube": {
                         "label": "YouTube",
-                        "placeholder": "Ej: @canal"
+                        "placeholder": "Ej: {'@'}canal"
                     }
                 },
                 "add_button": "Agregar Red Social"
@@ -180,7 +195,9 @@
                 "no_prospects": "No hay prospectos registrados aún.",
                 "unspecified": "No especificada",
                 "mark_new": "Marcar como nuevo",
-                "mark_reviewed": "Marcar como visto"
+                "mark_reviewed": "Marcar como visto",
+                "delete": "Eliminar",
+                "delete_confirm": "¿Estás seguro de que deseas eliminar este prospecto? Esta acción no se puede deshacer."
             },
             "csv": {
                 "filename": "prospectos",
