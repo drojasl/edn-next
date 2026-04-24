@@ -127,6 +127,17 @@
             "viewProfile": "Ver Perfil",
             "title": "EDN Admin"
         },
+        "settings": {
+            "title": "Opciones de Cuenta",
+            "subtitle": "Gestiona tu enlace personalizado y seguridad",
+            "slug_label": "URL del Perfil (Slug)",
+            "change_password": "Cambiar Contraseña",
+            "password_hint": "Dejar en blanco para mantener la contraseña actual.",
+            "new_password": "Nueva Contraseña",
+            "confirm_password": "Confirmar Contraseña",
+            "save": "Guardar Configuración",
+            "success": "Configuración actualizada correctamente"
+        },
         "dashboard": {
             "title": "Dashboard",
             "funnel_title": "Rendimiento y Embudo de Prospectos",

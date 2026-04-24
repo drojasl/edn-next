@@ -389,7 +389,7 @@ const handleSubmit = () => {
     </div>
 
     <!-- Slug -->
-    <div>
+    <div v-if="!isProfile">
       <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">
         {{ t('admin.users.slug') }}
       </label>
@@ -704,7 +704,7 @@ const handleSubmit = () => {
     </div>
 
     <!-- Password -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div v-if="!isProfile" class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label
           for="password"
