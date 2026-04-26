@@ -215,11 +215,11 @@ class AdminCourseController extends Controller
 
         \Illuminate\Support\Facades\DB::beginTransaction();
         try {
-            $baseSlug = $data['course']['slug'] . '-imported-' . time();
+            $baseSlug = $data['course']['slug'] . '-' . uniqid();
             
             $course = Course::create([
                 'user_id' => $request->user()->id,
-                'title' => $data['course']['title'] . ' (Imported)',
+                'title' => $data['course']['title'],
                 'slug' => $baseSlug,
                 'description' => $data['course']['description'],
                 'is_active' => false,
