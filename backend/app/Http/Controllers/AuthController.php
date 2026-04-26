@@ -67,4 +67,9 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Logged out successfully']);
     }
+
+    public function me(Request $request)
+    {
+        return $request->user()->load('socialLinks');
+    }
 }

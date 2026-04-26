@@ -129,7 +129,7 @@ const handleImportFile = async (event: Event) => {
     try {
       const response = await apiRequest({
         method: 'POST',
-        url: '/v1/admin/courses/import',
+        url: '/v1/admin/courses-batch/import',
         body: formData,
       })
       if (response.success) {

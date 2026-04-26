@@ -33,14 +33,12 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', function (Request $request) {
-        return $request->user()->load('socialLinks');
-    });
+    Route::get('/user', [AuthController::class, 'me']);
 
     // Admin API
     Route::prefix('v1/admin')->group(function () {
         // Courses
-        Route::post('courses/import', [\App\Http\Controllers\AdminCourseController::class, 'import']);
+        Route::post('courses-batch/import', [\App\Http\Controllers\AdminCourseController::class, 'import']);
         Route::get('courses/{course}/export', [\App\Http\Controllers\AdminCourseController::class, 'export']);
         Route::apiResource('courses', \App\Http\Controllers\AdminCourseController::class);
         Route::post('courses/update-connections', [\App\Http\Controllers\AdminCourseController::class, 'updateConnections']);
