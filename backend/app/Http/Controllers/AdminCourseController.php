@@ -215,14 +215,21 @@ class AdminCourseController extends Controller
 
         \Illuminate\Support\Facades\DB::beginTransaction();
         try {
-            $baseSlug = $data['course']['slug'] . '-' . uniqid();
+            $slug = $data['course']['slug'];
+            $originalSlug = $slug;
+            $count = 1;
+            // Now we only check for uniqueness within the current user's courses
+            while (\App\Models\Course::where('user_id', $request->user()->id)->where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $count;
+                $count++;
+            }
             
             $course = Course::create([
                 'user_id' => $request->user()->id,
                 'title' => $data['course']['title'],
-                'slug' => $baseSlug,
+                'slug' => $slug,
                 'description' => $data['course']['description'],
-                'is_active' => false,
+                'is_active' => $data['course']['is_active'] ?? true,
                 'pos_x' => $data['course']['pos_x'] ?? 0,
                 'pos_y' => $data['course']['pos_y'] ?? 0,
                 'next_course_id' => null,
