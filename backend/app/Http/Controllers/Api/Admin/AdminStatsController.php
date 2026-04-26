@@ -23,7 +23,7 @@ class AdminStatsController extends Controller
             ->with(['course'])
             ->get();
 
-        $stats = $accessCodes->map(function($code) {
+        $stats = $accessCodes->map(function($code) use ($user) {
             // Unique sessions that used this code
             $totalVisits = ProspectAccessLog::where('access_code_id', $code->id)
                 ->distinct('session_id')
@@ -43,7 +43,7 @@ class AdminStatsController extends Controller
             while ($currentCourse->next_course_id) {
                 if (in_array($currentCourse->next_course_id, $visitedCourseIds)) break;
                 
-                $nextCourse = Course::find($currentCourse->next_course_id);
+                $nextCourse = $user->courses()->find($currentCourse->next_course_id);
                 if ($nextCourse) {
                     $courseSequence->push($nextCourse);
                     $visitedCourseIds[] = $nextCourse->id;

@@ -1,6 +1,7 @@
 export interface Course {
   id: number
   title: string
+  slug?: string
   description?: string
   next_course_id: number | null
   next_course_label: string | null

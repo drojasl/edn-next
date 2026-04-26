@@ -40,6 +40,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin API
     Route::prefix('v1/admin')->group(function () {
         // Courses
+        Route::post('courses/import', [\App\Http\Controllers\AdminCourseController::class, 'import']);
+        Route::get('courses/{course}/export', [\App\Http\Controllers\AdminCourseController::class, 'export']);
         Route::apiResource('courses', \App\Http\Controllers\AdminCourseController::class);
         Route::post('courses/update-connections', [\App\Http\Controllers\AdminCourseController::class, 'updateConnections']);
         Route::post('courses/update-positions', [\App\Http\Controllers\AdminCourseController::class, 'updatePositions']);

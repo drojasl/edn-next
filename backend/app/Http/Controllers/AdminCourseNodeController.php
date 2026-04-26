@@ -78,8 +78,8 @@ class AdminCourseNodeController extends Controller
      */
     public function update(Request $request, $courseId, $nodeId)
     {
-        // validation/auth check implicit in middleware usually, but here we ensure hierarchy
-        $node = CourseNode::where('course_id', $courseId)->findOrFail($nodeId);
+        $course = $this->resolveCourse($courseId);
+        $node = CourseNode::where('course_id', $course->id)->findOrFail($nodeId);
 
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -115,7 +115,8 @@ class AdminCourseNodeController extends Controller
      */
     public function destroy($courseId, $nodeId)
     {
-        $node = CourseNode::where('course_id', $courseId)->findOrFail($nodeId);
+        $course = $this->resolveCourse($courseId);
+        $node = CourseNode::where('course_id', $course->id)->findOrFail($nodeId);
         $node->delete();
 
         // Auto-validate start/end status for remaining nodes
@@ -287,8 +288,11 @@ class AdminCourseNodeController extends Controller
      */
     private function resolveCourse($id)
     {
-        return Course::where('id', is_numeric($id) ? $id : 0)
-            ->orWhere('slug', $id)
+        return request()->user()->courses()
+            ->where(function ($query) use ($id) {
+                $query->where('id', is_numeric($id) ? $id : 0)
+                      ->orWhere('slug', $id);
+            })
             ->firstOrFail();
     }
 }

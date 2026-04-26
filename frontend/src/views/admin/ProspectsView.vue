@@ -81,46 +81,6 @@ const formatDate = (dateString: string) => {
   )
 }
 
-const exportCSV = () => {
-  if (prospects.value.length === 0) return
-
-  const headers = [
-    t('admin.prospects.csv.headers.name'),
-    t('admin.prospects.csv.headers.email'),
-    t('admin.prospects.csv.headers.phone'),
-    t('admin.prospects.csv.headers.city'),
-    t('admin.prospects.csv.headers.country'),
-    t('admin.prospects.csv.headers.date'),
-    t('admin.prospects.csv.headers.reviewed'),
-  ]
-  const content = [
-    headers.join(','),
-    ...prospects.value.map((p) =>
-      [
-        `"${p.name || ''}"`,
-        `"${p.email || ''}"`,
-        `"${p.phone || ''}"`,
-        `"${p.city || ''}"`,
-        `"${p.country || ''}"`,
-        `"${formatDate(p.created_at)}"`,
-        `"${p.is_reviewed ? t('admin.prospects.csv.status.yes') : t('admin.prospects.csv.status.no')}"`,
-      ].join(',')
-    ),
-  ].join('\n')
-
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.setAttribute('href', url)
-  link.setAttribute(
-    'download',
-    `${t('admin.prospects.csv.filename')}_${new Date().toISOString().split('T')[0]}.csv`
-  )
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
-
 onMounted(() => {
   fetchProspects()
 })
@@ -132,30 +92,6 @@ onMounted(() => {
       :title="$t('admin.prospects.title')"
       :description="$t('admin.prospects.description')"
     >
-      <template #actions>
-        <button
-          :disabled="prospects.length === 0"
-          class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:bg-slate-300 disabled:shadow-none transition-all flex items-center justify-center gap-2"
-          @click.stop="exportCSV"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          <span class="hidden sm:block">{{
-            $t('admin.prospects.export')
-          }}</span>
-        </button>
-      </template>
     </AdminPageHeader>
 
     <AdminDataTable

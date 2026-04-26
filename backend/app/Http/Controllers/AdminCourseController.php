@@ -11,9 +11,9 @@ class AdminCourseController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $courses = Course::with('nextCourse:id,title')->get();
+        $courses = $request->user()->courses()->with('nextCourse:id,title')->get();
         return response()->json([
             'success' => true,
             'data' => $courses
@@ -54,9 +54,9 @@ class AdminCourseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        $course = Course::with('nodes')->findOrFail($id);
+        $course = $request->user()->courses()->with('nodes')->findOrFail($id);
         return response()->json([
             'success' => true,
             'data' => $course
@@ -68,7 +68,7 @@ class AdminCourseController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $course = Course::findOrFail($id);
+        $course = $request->user()->courses()->findOrFail($id);
 
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -93,9 +93,9 @@ class AdminCourseController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        $course = Course::findOrFail($id);
+        $course = $request->user()->courses()->findOrFail($id);
         $course->delete();
 
         return response()->json([
@@ -117,7 +117,7 @@ class AdminCourseController extends Controller
         ]);
 
         foreach ($validated['connections'] as $connection) {
-            Course::where('id', $connection['id'])->update([
+            $request->user()->courses()->where('id', $connection['id'])->update([
                 'next_course_id' => $connection['next_course_id'],
                 'next_course_label' => $connection['next_course_label'] ?? null
             ]);
@@ -139,7 +139,7 @@ class AdminCourseController extends Controller
         ]);
 
         foreach ($validated['positions'] as $pos) {
-            Course::where('id', $pos['id'])->update([
+            $request->user()->courses()->where('id', $pos['id'])->update([
                 'pos_x' => $pos['pos_x'],
                 'pos_y' => $pos['pos_y']
             ]);
@@ -149,5 +149,147 @@ class AdminCourseController extends Controller
             'success' => true,
             'message' => 'Positions updated successfully'
         ]);
+    }
+
+    public function export(Request $request, string $id)
+    {
+        $course = $request->user()->courses()->with(['nodes.options'])->findOrFail($id);
+
+        $exportData = [
+            'version' => '1.0',
+            'course' => [
+                'title' => $course->title,
+                'slug' => $course->slug,
+                'description' => $course->description,
+                'is_active' => $course->is_active,
+                'pos_x' => $course->pos_x,
+                'pos_y' => $course->pos_y,
+            ],
+            'nodes' => $course->nodes->map(function ($node) {
+                return [
+                    'original_id' => $node->id,
+                    'type' => $node->type,
+                    'title' => $node->title,
+                    'slug' => $node->slug,
+                    'position' => $node->position,
+                    'content' => $node->content,
+                    'video_url' => $node->video_url,
+                    'playback_speed' => $node->playback_speed,
+                    'meeting_link' => $node->meeting_link,
+                    'show_description' => $node->show_description,
+                    'pos_x' => $node->pos_x,
+                    'pos_y' => $node->pos_y,
+                    'is_start' => $node->is_start,
+                    'is_end' => $node->is_end,
+                    'options' => $node->options->map(function ($option) {
+                        return [
+                            'label' => $option->label,
+                            'next_node_original_id' => $option->next_node_id,
+                        ];
+                    })->toArray()
+                ];
+            })->toArray()
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $exportData
+        ]);
+    }
+
+    public function import(Request $request)
+    {
+        $validated = $request->validate([
+            'file' => 'required|file'
+        ]);
+
+        $content = file_get_contents($request->file('file')->getRealPath());
+        $data = json_decode($content, true);
+
+        if (!$data || !isset($data['version']) || !isset($data['course']) || !isset($data['nodes'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid course export file.'
+            ], 400);
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $baseSlug = $data['course']['slug'] . '-imported-' . time();
+            
+            $course = Course::create([
+                'user_id' => $request->user()->id,
+                'title' => $data['course']['title'] . ' (Imported)',
+                'slug' => $baseSlug,
+                'description' => $data['course']['description'],
+                'is_active' => false,
+                'pos_x' => $data['course']['pos_x'] ?? 0,
+                'pos_y' => $data['course']['pos_y'] ?? 0,
+                'next_course_id' => null,
+                'next_course_label' => null,
+            ]);
+
+            $idMap = [];
+            $nodesWithOptions = [];
+
+            foreach ($data['nodes'] as $nodeData) {
+                $node = $course->nodes()->create([
+                    'type' => $nodeData['type'],
+                    'title' => $nodeData['title'],
+                    'slug' => $nodeData['slug'] . '-' . uniqid(),
+                    'position' => $nodeData['position'] ?? 0,
+                    'content' => $nodeData['content'] ?? null,
+                    'video_url' => $nodeData['video_url'] ?? null,
+                    'playback_speed' => $nodeData['playback_speed'] ?? 1.0,
+                    'meeting_link' => $nodeData['meeting_link'] ?? null,
+                    'show_description' => $nodeData['show_description'] ?? false,
+                    'pos_x' => $nodeData['pos_x'] ?? 0,
+                    'pos_y' => $nodeData['pos_y'] ?? 0,
+                    'is_start' => $nodeData['is_start'] ?? false,
+                    'is_end' => $nodeData['is_end'] ?? false,
+                ]);
+
+                if (isset($nodeData['original_id'])) {
+                    $idMap[$nodeData['original_id']] = $node->id;
+                }
+                
+                $nodeData['new_id'] = $node->id;
+                $nodesWithOptions[] = $nodeData;
+            }
+
+            if (!empty($nodesWithOptions)) {
+                foreach ($nodesWithOptions as $nodeData) {
+                    if (!empty($nodeData['options'])) {
+                        foreach ($nodeData['options'] as $opt) {
+                            $nextNodeId = null;
+                            if (!empty($opt['next_node_original_id']) && isset($idMap[$opt['next_node_original_id']])) {
+                                $nextNodeId = $idMap[$opt['next_node_original_id']];
+                            }
+
+                            \App\Models\CourseNodeOption::create([
+                                'course_node_id' => $nodeData['new_id'],
+                                'label' => $opt['label'],
+                                'next_node_id' => $nextNodeId,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course imported successfully.',
+                'data' => $course
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Import error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error importing course.'
+            ], 500);
+        }
     }
 }
