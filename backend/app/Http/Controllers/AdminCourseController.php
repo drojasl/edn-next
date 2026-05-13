@@ -200,7 +200,7 @@ class AdminCourseController extends Controller
     public function import(Request $request)
     {
         $validated = $request->validate([
-            'file' => 'required|file'
+            'file' => 'required|file|mimetypes:application/json,text/plain|mimes:json,txt'
         ]);
 
         $content = file_get_contents($request->file('file')->getRealPath());

@@ -7,11 +7,13 @@ const props = defineProps<{
 }>()
 
 const show = ref(false)
+const submitted = ref(false)
 const selectedCourseIds = ref<number[]>([])
 
 const emit = defineEmits(['export'])
 
 const open = () => {
+  submitted.value = false
   selectedCourseIds.value = []
   show.value = true
 }
@@ -21,7 +23,8 @@ const close = () => {
 }
 
 const handleExport = () => {
-  if (selectedCourseIds.value.length === 0) return
+  if (selectedCourseIds.value.length === 0 || submitted.value) return
+  submitted.value = true
   emit('export', selectedCourseIds.value)
   close()
 }
@@ -144,14 +147,37 @@ defineExpose({ open, close })
                 <button
                   type="button"
                   class="inline-flex w-full justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-indigo-700 transition-all sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                  :disabled="selectedCourseIds.length === 0"
+                  :disabled="selectedCourseIds.length === 0 || submitted"
                   @click="handleExport"
                 >
+                  <span v-if="submitted" class="mr-2">
+                    <svg
+                      class="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </span>
                   Exportar ({{ selectedCourseIds.length }})
                 </button>
                 <button
                   type="button"
-                  class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-all sm:mt-0 sm:w-auto"
+                  class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-all sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="submitted"
                   @click="close"
                 >
                   Cancelar

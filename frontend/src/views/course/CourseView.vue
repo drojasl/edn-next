@@ -11,6 +11,7 @@ import {
   type CourseNodeOption,
 } from '../../types'
 import BaseButton from '../../components/common/BaseButton.vue'
+import DOMPurify from 'dompurify'
 
 interface Props {
   node?: CourseNodeData
@@ -45,7 +46,12 @@ const processedDescription = computed(() => {
     ent.my_digital_store ? String(ent.my_digital_store) : '#'
   )
 
-  return text
+  return DOMPurify.sanitize(text, { ADD_ATTR: ['target'] })
+})
+
+const processedBody = computed(() => {
+  if (!props.node?.content?.body) return ''
+  return DOMPurify.sanitize(props.node.content.body, { ADD_ATTR: ['target'] })
 })
 
 const loading = ref(false)
@@ -555,7 +561,7 @@ const handleVideoLoad = (event: Event) => {
     <!-- Video Player (if type is video or menu with video) -->
     <div
       v-if="node.type === 'video' || (node.type === 'menu' && node.video_url)"
-      class="flex flex-col flex-1 overflow-y-auto"
+      class="flex flex-col overflow-y-auto"
     >
       <div class="aspect-video bg-slate-900 shadow-inner">
         <iframe
@@ -584,10 +590,10 @@ const handleVideoLoad = (event: Event) => {
 
       <div
         v-if="node.content?.description && node.show_description !== false"
-        class="px-2 md:px-3 lg:px-12 pt-1 text-sm md:text-base prose max-w-none flex-1"
+        class="px-4 pt-1 text-sm md:text-base prose max-w-none flex-1"
       >
         <div
-          class="text-slate-600 leading-relaxed rich-content"
+          class="text-slate-600 py-4 leading-relaxed rich-content"
           v-html="processedDescription"
         />
       </div>
@@ -759,7 +765,7 @@ const handleVideoLoad = (event: Event) => {
       class="flex-1 p-8 md:p-12 overflow-y-auto prose max-w-none"
     >
       <!-- eslint-disable-next-line vue/no-v-html -->
-      <div v-html="node.content?.body"></div>
+      <div v-html="processedBody"></div>
     </div>
 
     <!-- Menu without video: show description if available -->
@@ -769,7 +775,7 @@ const handleVideoLoad = (event: Event) => {
         class="p-8 prose max-w-none"
       >
         <div
-          class="text-slate-600 leading-relaxed rich-content"
+          class="text-slate-600 py-6 leading-relaxed rich-content"
           v-html="processedDescription"
         />
       </div>
@@ -786,7 +792,7 @@ const handleVideoLoad = (event: Event) => {
     <div
       v-if="node.type !== 'form'"
       :class="[
-        'p-4 md:p-8 flex flex-col items-center gap-4',
+        'p-4 pb-2 flex flex-col items-center gap-4',
         node.type === 'menu' && !node.video_url
           ? 'flex-1 justify-center'
           : 'border-t border-slate-100',

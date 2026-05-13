@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 interface Props {
   text: string
   variant?: 'primary'
-  action?: () => void
+  action?: () => void | Promise<unknown>
   extraProps?: {
     type?: 'button' | 'submit' | 'reset'
     disabled?: boolean
@@ -18,9 +20,22 @@ const props = withDefaults(defineProps<Props>(), {
   extraProps: () => ({}),
 })
 
-const handleClick = () => {
-  if (props.extraProps?.disabled || props.extraProps?.loading) return
-  props.action()
+const internalLoading = ref(false)
+
+const handleClick = async () => {
+  if (
+    props.extraProps?.disabled ||
+    props.extraProps?.loading ||
+    internalLoading.value
+  )
+    return
+
+  internalLoading.value = true
+  try {
+    await props.action()
+  } finally {
+    internalLoading.value = false
+  }
 }
 </script>
 
@@ -29,18 +44,18 @@ const handleClick = () => {
     v-bind="extraProps"
     :type="extraProps?.type || 'button'"
     :class="[
-      'cursor-pointer w-full py-5 rounded-2xl font-black text-xl transition-all transform active:scale-[0.98] flex items-center justify-center shadow-2xl',
+      'cursor-pointer w-full py-4 px-2 rounded-2xl font-black text-xl transition-all transform active:scale-[0.98] flex items-center justify-center shadow-2xl',
       variant === 'primary'
         ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-400 hover:to-purple-500 hover:scale-[1.02]'
         : '',
-      extraProps?.disabled || extraProps?.loading
+      extraProps?.disabled || extraProps?.loading || internalLoading
         ? 'opacity-30 cursor-not-allowed scale-100'
         : '',
     ]"
-    :disabled="extraProps?.disabled || extraProps?.loading"
+    :disabled="extraProps?.disabled || extraProps?.loading || internalLoading"
     @click.stop="handleClick"
   >
-    <span v-if="!extraProps?.loading">{{ text }}</span>
+    <span v-if="!(extraProps?.loading || internalLoading)">{{ text }}</span>
     <span v-else class="flex items-center">
       <svg
         class="animate-spin -ml-1 mr-3 h-6 w-6 text-white"

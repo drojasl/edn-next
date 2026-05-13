@@ -7,10 +7,11 @@ export interface ModalConfig {
   isDestructive?: boolean
   confirmText?: string
   cancelText?: string
-  onConfirm?: () => void | Promise<void>
+  onConfirm?: () => void | Promise<unknown>
 }
 
 const show = ref(false)
+const loading = ref(false)
 const config = ref<ModalConfig>({
   title: '',
   message: '',
@@ -26,16 +27,24 @@ const open = (newConfig: ModalConfig) => {
     cancelText: newConfig.cancelText,
     isDestructive: newConfig.isDestructive || false,
   }
+  loading.value = false
   show.value = true
 }
 
 const close = () => {
+  if (loading.value) return
   show.value = false
 }
 
 const handleConfirm = async () => {
-  if (config.value.onConfirm) {
-    await config.value.onConfirm()
+  if (loading.value) return
+  loading.value = true
+  try {
+    if (config.value.onConfirm) {
+      await config.value.onConfirm()
+    }
+  } finally {
+    loading.value = false
   }
   close()
 }
@@ -143,18 +152,43 @@ defineExpose({ open, close })
                 <button
                   type="button"
                   class="inline-flex w-full justify-center rounded-xl px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all sm:w-auto"
-                  :class="
+                  :class="[
                     config.isDestructive
                       ? 'bg-red-600 hover:bg-red-700'
-                      : 'bg-indigo-600 hover:bg-indigo-700'
-                  "
+                      : 'bg-indigo-600 hover:bg-indigo-700',
+                    loading ? 'opacity-50 cursor-not-allowed' : '',
+                  ]"
+                  :disabled="loading"
                   @click="handleConfirm"
                 >
+                  <span v-if="loading" class="mr-2">
+                    <svg
+                      class="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </span>
                   {{ config.confirmText || $t('common.confirm') }}
                 </button>
                 <button
                   type="button"
-                  class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-all sm:mt-0 sm:w-auto"
+                  class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-all sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="loading"
                   @click="close"
                 >
                   {{ config.cancelText || $t('common.cancel') }}
